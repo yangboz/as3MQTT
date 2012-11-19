@@ -25,4 +25,6 @@ Features of the protocol include:
 
 ## MQ Telemetry Transport (MQTT) V3.1 Protocol Specification
 
+http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html
 
+http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/MQTT_V3.1_Protocol_Specific.pdf
