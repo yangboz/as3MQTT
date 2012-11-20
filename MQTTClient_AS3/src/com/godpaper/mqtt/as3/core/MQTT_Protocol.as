@@ -19,7 +19,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  *  IN THE SOFTWARE.
  */
-package com.godpaper.mqtt.as3
+package com.godpaper.mqtt.as3.core
 {
 	//--------------------------------------------------------------------------
 	//
@@ -48,7 +48,10 @@ package com.godpaper.mqtt.as3
 		//  CONSTANTS
 		//----------------------------------
 		/* For version 3 of the MQTT protocol */
-		
+		/* Mosquitto MQTT Javascript/Websocket client */
+		/* Provides complete support for QoS 0. 
+		* Will not cause an error on QoS 1/2 packets.
+		*/
 		public static const PROTOCOL_NAME:String =  "MQIsdp";
 		public static const PROTOCOL_VERSION:Number = 3;
 		
