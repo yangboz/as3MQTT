@@ -34,3 +34,7 @@ http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/MQTT_V3.1_Protocol_Spe
 http://www.redbooks.ibm.com/redbooks/pdfs/sg248054.pdf
 
 http://www-sop.inria.fr/maestro/MASTER-RSD/html/2004-05/perez.pdf
+
+## Tips
+
+Mosquitto console at Ubuntu: tcpdump -nl -A port 1883
