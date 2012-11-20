@@ -28,3 +28,9 @@ Features of the protocol include:
 http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html
 
 http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/MQTT_V3.1_Protocol_Specific.pdf
+
+## White Papers 
+
+http://www.redbooks.ibm.com/redbooks/pdfs/sg248054.pdf
+
+http://www-sop.inria.fr/maestro/MASTER-RSD/html/2004-05/perez.pdf
