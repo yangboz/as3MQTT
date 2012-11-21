@@ -105,36 +105,36 @@ package
 			//MQTT byte array prepare.
 			//@see https://www.ibm.com/developerworks/mydeveloperworks/blogs/messaging/entry/write_your_own_mqtt_client_without_using_any_api_in_minutes1?lang=en
 			//for connection
-			this.connectMesage.writeUnsignedInt(0x10); //Connect
-			this.connectMesage.writeUnsignedInt(0x0C + 0x04); //Remaining Length
-			this.connectMesage.writeUnsignedInt(0x00); //0
-			this.connectMesage.writeUnsignedInt(0x06); //6
-			this.connectMesage.writeUnsignedInt(0x4d); //M
-			this.connectMesage.writeUnsignedInt(0x51); //Q
-			this.connectMesage.writeUnsignedInt(0x49); //I
-			this.connectMesage.writeUnsignedInt(0x73); //S
-			this.connectMesage.writeUnsignedInt(0x64); //D
-			this.connectMesage.writeUnsignedInt(0x70); //P
-			this.connectMesage.writeUnsignedInt(0x03); //Protocol version = 3
-			this.connectMesage.writeUnsignedInt(0x02); //Clean session only
-			this.connectMesage.writeUnsignedInt(0x00); //Keepalive MSB
-			this.connectMesage.writeUnsignedInt(0x3c); //Keepaliave LSB = 60
-			this.connectMesage.writeUnsignedInt(0x00); //String length MSB
-			this.connectMesage.writeUnsignedInt(0x02); //String length LSB = 2
-			this.connectMesage.writeUnsignedInt(0x4d); //M
-			this.connectMesage.writeUnsignedInt(0x70); //P .. Let's say client ID = MP
+			this.connectMesage.writeByte(0x10); //Connect
+			this.connectMesage.writeByte(0x0C + 0x04); //Remaining Length
+			this.connectMesage.writeByte(0x00); //0
+			this.connectMesage.writeByte(0x06); //6
+			this.connectMesage.writeByte(0x4d); //M
+			this.connectMesage.writeByte(0x51); //Q
+			this.connectMesage.writeByte(0x49); //I
+			this.connectMesage.writeByte(0x73); //S
+			this.connectMesage.writeByte(0x64); //D
+			this.connectMesage.writeByte(0x70); //P
+			this.connectMesage.writeByte(0x03); //Protocol version = 3
+			this.connectMesage.writeByte(0x02); //Clean session only
+			this.connectMesage.writeByte(0x00); //Keepalive MSB
+			this.connectMesage.writeByte(0x3c); //Keepaliave LSB = 60
+			this.connectMesage.writeByte(0x00); //String length MSB
+			this.connectMesage.writeByte(0x02); //String length LSB = 2
+			this.connectMesage.writeByte(0x4d); //M
+			this.connectMesage.writeByte(0x70); //P .. Let's say client ID = MP
 			//for publish
-			this.publishMessage.writeUnsignedInt(0x30); //Publish with QOS 0
-			this.publishMessage.writeUnsignedInt(0x05 + 0x05); //Remaining length
-			this.publishMessage.writeUnsignedInt(0x00); //MSB
-			this.publishMessage.writeUnsignedInt(0x03); //3 bytes of topic
-			this.publishMessage.writeUnsignedInt(0x61); //a
-			this.publishMessage.writeUnsignedInt(0x2F); ///
-			this.publishMessage.writeUnsignedInt(0x62); //b (a/b) is the topic
+			this.publishMessage.writeByte(0x30); //Publish with QOS 0
+			this.publishMessage.writeByte(0x05 + 0x05); //Remaining length
+			this.publishMessage.writeByte(0x00); //MSB
+			this.publishMessage.writeByte(0x03); //3 bytes of topic
+			this.publishMessage.writeByte(0x61); //a
+			this.publishMessage.writeByte(0x2F); ///
+			this.publishMessage.writeByte(0x62); //b (a/b) is the topic
 			this.publishMessage.writeUTFBytes("HELLO"); // (0x48, 0x45 , 0x4c , 0x4c, 0x4f); //HELLO is the message
 			//for disconnect
-			this.disconnectMessage.writeUnsignedInt(0x0E); //Disconnect
-			this.disconnectMessage.writeUnsignedInt(0x00); //Disconnect
+			this.disconnectMessage.writeByte(0x0E); //Disconnect
+			this.disconnectMessage.writeByte(0x00); //Disconnect
 		}
 
 		//--------------------------------------------------------------------------
@@ -160,17 +160,16 @@ package
 //			mqttSocket.writeUTFBytes("GET / HTTP/1.1\n");
 //			mqttSocket.writeUTFBytes("Host: hejp.co.uk\n");
 //			mqttSocket.writeUTFBytes("\n");
-//			mqttSocket.writeBytes(this.connectMesage);
 			trace(this.connectMesage.length);
 			this.mqttSocket.writeBytes(this.connectMesage,0,this.connectMesage.length);
-//			this.mqttSocket.writeUTF("HELLO");
+//			trace(this.mqttSocket.endian);
 			this.mqttSocket.flush();
 		}
 
 		private function onClose(event:Event):void
 		{
 			// Security error is thrown if this line is excluded
-			trace(event);
+  			trace(event);
 			mqttSocket.close();
 		}
 
@@ -193,7 +192,7 @@ package
 			}
 		}
 
-		//
+		// 
 		private function generateClientID():String
 		{
 			var uuid:String=UIDUtil.createUID();
