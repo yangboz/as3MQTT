@@ -62,12 +62,13 @@ package
 		//First let's construct the MQTT messages that need to be sent:
 		private var connectMesage:ByteArray=new ByteArray();
 		private var publishMessage:ByteArray=new ByteArray();
+		private var subscribeMessage:ByteArray=new ByteArray();
 		private var disconnectMessage:ByteArray=new ByteArray();
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
 		//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
-		private static const MY_HOST:String="16.157.68.220"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23
+		private static const MY_HOST:String="16.157.65.23"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
 		private static const MY_PORT:Number=1883; //Socket port.
 
 		//--------------------------------------------------------------------------
@@ -123,6 +124,8 @@ package
 			this.connectMesage.writeByte(0x02); //String length LSB = 2
 			this.connectMesage.writeByte(0x4d); //M
 			this.connectMesage.writeByte(0x70); //P .. Let's say client ID = MP
+			//for subscribe: subscribes to topics */
+			
 			//for publish
 			this.publishMessage.writeByte(0x30); //Publish with QOS 0
 			this.publishMessage.writeByte(0x05 + 0x05); //Remaining length
@@ -135,6 +138,7 @@ package
 			//for disconnect
 			this.disconnectMessage.writeByte(0x0E); //Disconnect
 			this.disconnectMessage.writeByte(0x00); //Disconnect
+			
 		}
 
 		//--------------------------------------------------------------------------
@@ -160,7 +164,7 @@ package
 //			mqttSocket.writeUTFBytes("GET / HTTP/1.1\n");
 //			mqttSocket.writeUTFBytes("Host: hejp.co.uk\n");
 //			mqttSocket.writeUTFBytes("\n");
-			trace(this.connectMesage.length);
+			trace("connectMesage.length:",this.connectMesage.length);
 			this.mqttSocket.writeBytes(this.connectMesage,0,this.connectMesage.length);
 //			trace(this.mqttSocket.endian);
 			this.mqttSocket.flush();
@@ -170,6 +174,7 @@ package
 		{
 			// Security error is thrown if this line is excluded
   			trace(event);
+			mqttSocket.writeBytes(this.disconnectMessage,0,this.disconnectMessage.length);
 			mqttSocket.close();
 		}
 
@@ -186,10 +191,17 @@ package
 		private function onSocketData(event:ProgressEvent):void
 		{
 			trace( "Socket received " + this.mqttSocket.bytesAvailable + " byte(s) of data:");  
+			// Loop over all of the received data, and only read a byte if there  is one available 
 			while  (mqttSocket.bytesAvailable)
 			{
-				trace(mqttSocket.readUTFBytes(mqttSocket.bytesAvailable));
+				// Read a byte from the socket and display it  
+				var data:int = mqttSocket.readByte();  
+				trace( data );  
+//				trace(mqttSocket.readUTFBytes(mqttSocket.bytesAvailable).toString());
 			}
+			//publish message for testing
+//			this.mqttSocket.writeBytes(this.publishMessage,0,this.publishMessage.length);
+//			this.mqttSocket.flush();
 		}
 
 		// 

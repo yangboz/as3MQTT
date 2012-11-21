@@ -101,13 +101,13 @@ package com.godpaper.mqtt.as3.impl
 		
 		/* connects to the broker
 		inputs: $clean: should the client send a clean session flag */
-		public function connect($clean = true, $will = NULL, $username = NULL, $password = NULL){
+		public function connect(clean:Boolean = true, will:* = null, username:String = null, password:String = null){
 			
-			if($will) $this->will = $will;
-			if($username) $this->username = $username;
-			if($password) $this->password = $password;
+			if(will) this.will = will;
+			if(username) this.username = username;
+			if(password) this.password = password;
 			
-			$address = gethostbyname($this->address);	
+			address = gethostbyname(this.address);	
 			$this->socket = fsockopen($address, $this->port, $errno, $errstr, 60);
 			
 			if (!$this->socket ) {
@@ -185,7 +185,7 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		/* read: reads in so many bytes */
-		function read($int = 8192 ){
+		public function read($int = 8192 ){
 			
 			// print_r(socket_get_status($this->socket));
 			
@@ -203,7 +203,7 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		/* subscribe: subscribes to topics */
-		function subscribe($topics, $qos = 0){
+		public function subscribe($topics, $qos = 0){
 			$i = 0;
 			$buffer = "";
 			$id = $this->msgid;
@@ -233,7 +233,7 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		/* ping: sends a keep alive ping */
-		function ping(){
+		public function ping(){
 			$head = " ";
 			$head = chr(0xc0);	
 			$head .= chr(0x00);
@@ -242,7 +242,7 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		/* disconnect: sends a proper disconect cmd */
-		function disconnect(){
+		public function disconnect(){
 			$head = " ";
 			$head{0} = chr(0xe0);	
 			$head{1} = chr(0x00);
@@ -250,13 +250,13 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		/* close: sends a proper disconect, then closes the socket */
-		function close(){
+		public function close(){
 			$this->disconnect();
 			fclose($this->socket);	
 		}
 		
 		/* publish: publishes $content on a $topic */
-		function publish($topic, $content, $qos = 0, $retain = 0){
+		public function publish($topic, $content, $qos = 0, $retain = 0){
 			
 			$i = 0;
 			$buffer = "";
@@ -392,7 +392,7 @@ package com.godpaper.mqtt.as3.impl
 		
 		
 		/* setmsglength: */
-		function setmsglength($len){
+		public function setmsglength($len){
 			$string = "";
 			do{
 				$digit = $len % 128;
@@ -406,7 +406,7 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		/* strwritestring: writes a string to a buffer */
-		function strwritestring($str, &$i){
+		public function strwritestring($str, &$i){
 			$ret = " ";
 			$len = strlen($str);
 			$msb = $len >> 8;
@@ -418,7 +418,7 @@ package com.godpaper.mqtt.as3.impl
 			return $ret;
 		}
 		
-		function printstr($string){
+		public function printstr($string){
 			$strlen = strlen($string);
 			for($j=0;$j<$strlen;$j++){
 				$num = ord($string{$j});
@@ -438,6 +438,11 @@ package com.godpaper.mqtt.as3.impl
 		//  Private methods
 		//
 		//--------------------------------------------------------------------------
+		private function gethostbyname(host:String):String
+		{
+			//TODO:gethostbyname handler.
+			return host;
+		}
 	}
 	
 }
