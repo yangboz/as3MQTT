@@ -38,3 +38,7 @@ http://www-sop.inria.fr/maestro/MASTER-RSD/html/2004-05/perez.pdf
 ## Tips
 
 Mosquitto console at Linux: tcpdump -nl -A port 1883
+
+## Wiki
+
+https://github.com/yangboz/as3MQTT/wiki
