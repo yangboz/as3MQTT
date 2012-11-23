@@ -102,7 +102,7 @@ package com.godpaper.mqtt.as3.impl
 		 * The topic name is a UTF-encoded string. See the section on MQTT and UTF-8 for more information.</br>
 		 * Topic name has an upper length limit of 32,767 characters.</br>
 		 * */
-		public var topicname:String; /* stores topic name */
+		public var topicname:String="RoYan_／"; /* default stores topic name */
 		//MQTT byte array prepare.
 		//@see https://www.ibm.com/developerworks/mydeveloperworks/blogs/messaging/entry/write_your_own_mqtt_client_without_using_any_api_in_minutes1?lang=en
 		//First let's construct the MQTT messages that need to be sent:
@@ -117,7 +117,8 @@ package com.godpaper.mqtt.as3.impl
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
-		
+		private static const MAX_LEN_UUID:int = 16;
+		private static const MAX_LEN_TOPIC:int = 7;
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties
@@ -138,16 +139,23 @@ package com.godpaper.mqtt.as3.impl
 		public function MQTTSocket(host:String=null, port:int=0,topicname:String = null,clientid:String = null,username:String = null,password:String = null)
 		{
 			//parameters store
-			if(host) this.host = host;
+			if(host) this.host = host;//TODO:ip and hostname regexp test or match function.
 			if(port) this.port = port;
-			if(topicname) this.topicname = topicname;
+			if(topicname) 
+			{
+				if(this.topicname.length>MAX_LEN_TOPIC) throw new Error("Out of range ".concat(MAX_LEN_TOPIC,"!"));
+				this.topicname = topicname;
+			}
 			if(clientid)
 			{
+				if(this.clientid.length>MAX_LEN_UUID) throw new Error("Out of range ".concat(MAX_LEN_UUID,"!"));
 				this.clientid = clientid;
 			}else
 			{
-				this.clientid = UIDUtil.createUID();//Assure unique.
+				this.clientid = UIDUtil.createUID();//Assure unique. and cut off the string length to 16.
+				this.clientid = this.shortenString(this.clientid,MAX_LEN_UUID);
 			}
+			//Any out of range issue???
 			if(username) this.username = username;
 			if(password) this.password = password;
 			//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
@@ -175,12 +183,18 @@ package com.godpaper.mqtt.as3.impl
 		//--------------------------------------------------------------------------
 		public function subscribe(topicname:String,Qos:int=0):void
 		{
-			//TODO:
+			//subscribe list store,and subscribe to socket server.
+			if(topicname.length>MAX_LEN_TOPIC) throw new Error("Out of range ".concat(MAX_LEN_TOPIC,"!"));
+			if(this.topics.indexOf(topicname)==-1)
+			{
+				this.topics.push(topicname);
+			}
+			//TODO:send subscribe message
 		}
 		//
 		public function publish(content:String,topicname:String,QoS:int=0,retain:String=null):void
 		{
-			//TODO:
+			//TODO:socket sever response detect.
 			var bytes:ByteArray = new ByteArray();
 			writeString(bytes, topicname);
 						
@@ -205,12 +219,12 @@ package com.godpaper.mqtt.as3.impl
 					
 			trace( "Publish sent" );
 		}
-	    public function connect(host:String, port:int):void
+	    public function connect(host:String=null, port:int=0):void
 		{
-			this.host = host;
-			this.port = port;
+			if(host) this.host = host;//TODO:ip and hostname regexp test or match function.
+			if(port) this.port = port;
 			//
-			socket.connect(host,port);
+			socket.connect(this.host,this.port);
 		}
 		/* disconnect: sends a proper disconect cmd */
 		public function close():void
@@ -248,7 +262,7 @@ package com.godpaper.mqtt.as3.impl
 		//
 		private function onConnect(event:Event):void
 		{
-			trace(event);
+//			trace(event);
 			//			socket.writeUTFBytes("GET / HTTP/1.1\n");
 			//			socket.writeUTFBytes("Host: hejp.co.uk\n");
 			//			socket.writeUTFBytes("\n");
@@ -374,7 +388,16 @@ package com.godpaper.mqtt.as3.impl
 			socket.flush();
 			trace("Ping sent");
 		}
-		
+		//
+		private function shortenString(str:String,len:int):String
+		{
+			var result:String = str;
+			if(str.length>len)
+			{
+				result = str.substr(0,len);	
+			}
+			return result;
+		}
 	}
 	
 }

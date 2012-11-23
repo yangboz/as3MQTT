@@ -31,6 +31,7 @@ package com.godpaper.mqtt.as3.core
 	
 	/**
 	 * MQTTEvent.as class.   	
+	 * @see http://blogs.adobe.com/steampowered/2011/05/dispatching-events-from-an-actionscript-class.html
 	 * @author yangboz
 	 * @langVersion 3.0
 	 * @playerVersion 11.2+
