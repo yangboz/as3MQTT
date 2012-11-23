@@ -44,12 +44,15 @@ package com.godpaper.mqtt.as3.core
 		//  Variables
 		//
 		//--------------------------------------------------------------------------
-		
+		public var message:String;
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
+		//@see https://github.com/yangboz/as3MQTT/wiki/Command-message
 		public static const CONNECT:String = "mqttConnect";
 		public static const CLOSE:String = "mqttClose";
+		public static const MESSGE:String = "mqttMessage";//A wrapper for mqtt socket data.
+		public static const ERROR:String = "mqttError";//A wrapper for mqtt socket error(IOError,SercurityError)
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties
@@ -67,7 +70,7 @@ package com.godpaper.mqtt.as3.core
 		//  Constructor
 		//
 		//--------------------------------------------------------------------------
-		public function MQTTEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+		public function MQTTEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false,message:String=null)
 		{
 			super(type, bubbles, cancelable);
 		}     	
@@ -78,7 +81,7 @@ package com.godpaper.mqtt.as3.core
 		//--------------------------------------------------------------------------
 		override public function clone():Event
 		{
-			return new MQTTEvent(type,bubbles,cancelable);
+			return new MQTTEvent(type,bubbles,cancelable,message);
 		}
 		//--------------------------------------------------------------------------
 		//

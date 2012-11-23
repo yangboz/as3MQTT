@@ -93,9 +93,8 @@ package
 			//event listeners
 			mqttSocket.addEventListener(MQTTEvent.CONNECT, onConnect); //dispatched when the connection is established
 			mqttSocket.addEventListener(MQTTEvent.CLOSE, onClose); //dispatched when the connection is closed
-			mqttSocket.addEventListener(IOErrorEvent.IO_ERROR, onError); //dispatched when an error occurs
-			mqttSocket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
-			mqttSocket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
+			mqttSocket.addEventListener(MQTTEvent.ERROR, onError); //dispatched when an error occurs
+			mqttSocket.addEventListener(MQTTEvent.MESSGE, onMessage); //dispatched when socket can be read
 			//try to connect
 			mqttSocket.connect(MY_HOST, MY_PORT);
 		}
@@ -120,41 +119,26 @@ package
 		//
 		private function onConnect(event:Event):void
 		{
-			trace(event);
+			trace("MQTT connect: ",event);
 		}
 
 		//
 		private function onClose(event:Event):void
 		{
-			// Security error is thrown if this line is excluded
-			trace(event);
+			trace("MQTT close: ",event);
 		}
 
 		//
-		private function onError(event:IOErrorEvent):void
+		private function onError(event:MQTTEvent):void
 		{
-			trace("MQTT IO Error: " + event);
+			trace("MQTT Error: ",event);
 		}
 
-		//
-		private function onSecError(event:SecurityErrorEvent):void
-		{
-			trace("MQTT Security Error: " + event);
-		}
 
 		//
-		private function onSocketData(event:ProgressEvent):void
+		private function onMessage(event:MQTTEvent):void
 		{
-			trace("MQTT Socket received " + this.mqttSocket.bytesAvailable + " byte(s) of data:");
-			// Loop over all of the received data, and only read a byte if there  is one available 
-			var data:Vector.<int> = new Vector.<int>();
-			while (mqttSocket.bytesAvailable)
-			{
-				// Read a byte from the socket and display it  
-//				data = mqttSocket.readInt();
-//				trace(mqttSocket.readUTFBytes(mqttSocket.bytesAvailable).toString());
-			}
-			trace(data.toString());
+			trace("MQTT message: ",event.message);
 		}
 
 	}

@@ -32,6 +32,7 @@ package com.godpaper.mqtt.as3.impl
 	
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
@@ -41,12 +42,12 @@ package com.godpaper.mqtt.as3.impl
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
-	
-	/** Dispatched when a new MQTT server is connected. */
-	[Event(name="mqttConnect", type="flash.events.Event")]
-	
-	/** Dispatched when a new  MQTT server is closed. */
-	[Event(name="mqttClose", type="flash.events.Event")]
+//TODO:event metdata declare
+//	/** Dispatched when a new MQTT server is connected. */
+//	[Event(name="mqttConnect", type="flash.events.Event")]
+//	
+//	/** Dispatched when a new  MQTT server is closed. */
+//	[Event(name="mqttClose", type="flash.events.Event")]
 	/**
 	 * Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </br>
 	 * AS3 socket is a mechanism used to send data over a network (e.g. the Internet), it is the combination of an IP address and a port. </br>
@@ -61,7 +62,7 @@ package com.godpaper.mqtt.as3.impl
 	 * @airVersion 3.2+
 	 * Created Nov 22, 2012 4:14:14 PM
 	 */   	 
-	public class MQTTSocket extends Socket
+	public class MQTTSocket extends EventDispatcher
 	{		
 		//--------------------------------------------------------------------------
 		//
@@ -136,7 +137,6 @@ package com.godpaper.mqtt.as3.impl
 		//--------------------------------------------------------------------------
 		public function MQTTSocket(host:String=null, port:int=0,topicname:String = null,clientid:String = null,username:String = null,password:String = null)
 		{
-			super(host, port);
 			//parameters store
 			if(host) this.host = host;
 			if(port) this.port = port;
@@ -160,7 +160,7 @@ package com.godpaper.mqtt.as3.impl
 			socket.addEventListener(IOErrorEvent.IO_ERROR, onError); //dispatched when an error occurs
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
-			
+			//Timer for ping function.
 			timer = new Timer(5000);
 			timer.addEventListener(TimerEvent.TIMER, onPing);
 			
@@ -205,15 +205,15 @@ package com.godpaper.mqtt.as3.impl
 					
 			trace( "Publish sent" );
 		}
-		override public function connect(host:String, port:int):void
+	    public function connect(host:String, port:int):void
 		{
 			this.host = host;
 			this.port = port;
 			//
-			super.connect(host,port);
+			socket.connect(host,port);
 		}
 		/* disconnect: sends a proper disconect cmd */
-		override public function close():void
+		public function close():void
 		{
 			if(this.disconnectMessage == null)
 			{
@@ -221,12 +221,10 @@ package com.godpaper.mqtt.as3.impl
 				this.disconnectMessage.writeType(MQTT_Protocol.DISCONNECT);
 			}
 			socket.writeBytes(this.disconnectMessage, 0, this.disconnectMessage.length);
-			socket.flush()
+			socket.flush();
 			socket.close();
-			//
-			super.close();
 			//dispatch event
-			this.dispatchEvent(new Event(MQTTEvent.CLOSE,false,false));
+			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE,false,false));
 		}
 		//--------------------------------------------------------------------------
 		//
@@ -296,28 +294,31 @@ package com.godpaper.mqtt.as3.impl
 			this.socket.writeBytes(this.connectMessage, 0, this.connectMessage.length);
 			this.socket.flush();
 			//dispatch event
-			this.dispatchEvent(new Event(MQTTEvent.CONNECT,false,false));
+			this.dispatchEvent(new MQTTEvent(MQTTEvent.CONNECT,false,false));
 		}
 		
 		//
 		private function onClose(event:Event):void
 		{
 			// Security error is thrown if this line is excluded
-			trace(event);
-			//socket.writeBytes(this.disconnectMessage, 0, this.disconnectMessage.length);
-			//socket.close();
+			//dispatch event
+			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE,false,false));
 		}
 		
 		//
 		private function onError(event:IOErrorEvent):void
 		{
 			trace("MQTT IO Error: " + event);
+			//dispatch event
+			this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
 		}
 		
 		//
 		private function onSecError(event:SecurityErrorEvent):void
 		{
 			trace("MQTT Security Error: " + event);
+			//dispatch event
+			this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
 		}
 		
 		//
@@ -336,11 +337,13 @@ package com.godpaper.mqtt.as3.impl
 						trace( "Socket connected" );
 						servicing = true;
 						//dispatchEvent();
-						
+						this.dispatchEvent(new MQTTEvent(MQTTEvent.MESSGE,false,false,result.toString()));
+						//
 						timer.start();
 					}else{
 						trace( "Connection failed!" );
 						//dispatchEvent();
+						this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
 					}
 					break;
 				case MQTT_Protocol.PUBACK:
@@ -356,10 +359,10 @@ package com.godpaper.mqtt.as3.impl
 					trace( "Ping Response" );
 					break;
 				default:
-					trace( "Other" );
+					trace( "Others." );
 			}
 		}
-		
+		//
 		private function onPing(event:TimerEvent):void
 		{
 			if(this.pingMessage == null)
