@@ -169,7 +169,7 @@ package com.godpaper.mqtt.as3.impl
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
 			//Timer for ping function.
-			timer = new Timer(5000);
+			timer = new Timer(keepalive / 2 * 1000);
 			timer.addEventListener(TimerEvent.TIMER, onPing);
 			
 //			this.publishMessage.writeUTFBytes("HELLO"); // (0x48, 0x45 , 0x4c , 0x4c, 0x4f); //HELLO is the message
