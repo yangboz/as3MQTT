@@ -21,6 +21,8 @@
  */
 package com.godpaper.mqtt.as3.core
 {
+	import flash.utils.ByteArray;
+
 	//--------------------------------------------------------------------------
 	//
 	//  Imports

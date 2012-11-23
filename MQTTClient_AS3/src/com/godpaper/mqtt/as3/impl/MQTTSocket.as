@@ -93,6 +93,7 @@ package com.godpaper.mqtt.as3.impl
 		public var username:String;	/* stores username */
 		public var password:String;	/* stores password */
 		public var QoS:int=0;/* stores QoS level */
+		private var clean:Boolean=true;/* as3 socket fluse auto clean */
 		/**
 		 * The topic name is present in the variable header of an MQTT PUBLISH message.</br>
 		 * The topic name is the key that identifies the information channel to which payload data is published.</br>
@@ -104,13 +105,14 @@ package com.godpaper.mqtt.as3.impl
 		//MQTT byte array prepare.
 		//@see https://www.ibm.com/developerworks/mydeveloperworks/blogs/messaging/entry/write_your_own_mqtt_client_without_using_any_api_in_minutes1?lang=en
 		//First let's construct the MQTT messages that need to be sent:
-		private var connectMesage:MQTT_Protocol;
+		private var connectMessage:MQTT_Protocol;
 		private var publishMessage:MQTT_Protocol;
 //		private var subscribeMessage:ByteArray=new ByteArray();
 		private var disconnectMessage:MQTT_Protocol;
 		private var pingMessage:MQTT_Protocol;
 		
 		private var timer:Timer;
+		private var servicing:Boolean;/*service indicator*/
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
@@ -182,7 +184,7 @@ package com.godpaper.mqtt.as3.impl
 			var bytes:ByteArray = new ByteArray();
 			writeString(bytes, topicname);
 						
-			if( params.qos )
+			if( QoS )
 			{
 				msgid++;
 				bytes.writeByte(msgid >> 8);
@@ -231,7 +233,15 @@ package com.godpaper.mqtt.as3.impl
 		//  Protected methods
 		//
 		//--------------------------------------------------------------------------
-		
+		protected function writeString(bytes:ByteArray, str:String):void
+		{
+			var len:int = str.length;
+			var msb:int = len >>8;
+			var lsb:int = len % 256;
+			bytes.writeByte(msb);
+			bytes.writeByte(lsb);
+			bytes.writeMultiByte(str, 'utf-8');
+		}
 		//--------------------------------------------------------------------------
 		//
 		//  Private methods
@@ -278,12 +288,12 @@ package com.godpaper.mqtt.as3.impl
 					writeString(bytes, clientid);
 					writeString(bytes, username?username:"");
 					writeString(bytes, password?password:"");
-				this.connectMesage.writeType(MQTT_Protocol.CONNECT); //Connect
-				this.connectMesage.writeBody(bytes); //Connect
+				this.connectMessage.writeType(MQTT_Protocol.CONNECT); //Connect
+				this.connectMessage.writeBody(bytes); //Connect
 			}
 			
-			trace("MQTT connectMesage.length:", this.connectMesage.length);
-			this.socket.writeBytes(this.connectMesage, 0, this.connectMesage.length);
+			trace("MQTT connectMesage.length:", this.connectMessage.length);
+			this.socket.writeBytes(this.connectMessage, 0, this.connectMessage.length);
 			this.socket.flush();
 			//dispatch event
 			this.dispatchEvent(new Event(MQTTEvent.CONNECT,false,false));
@@ -362,15 +372,6 @@ package com.godpaper.mqtt.as3.impl
 			trace("Ping sent");
 		}
 		
-		protected function writeString(bytes:ByteArray, str:String):void
-		{
-			var len:int = str.length;
-			var msb:int = len >>8;
-			var lsb:int = len % 256;
-			bytes.writeByte(msb);
-			bytes.writeByte(lsb);
-			bytes.writeMultiByte(str, 'utf-8');
-		}
 	}
 	
 }

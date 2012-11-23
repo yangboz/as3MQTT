@@ -64,7 +64,7 @@ package
 		//  CONSTANTS
 		//----------------------------------
 		//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
-		private static const MY_HOST:String="16.157.65.23"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
+		private static const MY_HOST:String="test.mosquitto.org"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
 		private static const MY_PORT:Number=1883; //Socket port.
 		//--------------------------------------------------------------------------
 		//

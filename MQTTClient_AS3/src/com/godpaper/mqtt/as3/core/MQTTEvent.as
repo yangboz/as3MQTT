@@ -76,10 +76,10 @@ package com.godpaper.mqtt.as3.core
 		//  Public methods
 		//
 		//--------------------------------------------------------------------------
-//		override public function clone():Event
-//		{
-//			return new MQTTEvent("",false,false);
-//		}
+		override public function clone():Event
+		{
+			return new MQTTEvent(type,bubbles,cancelable);
+		}
 		//--------------------------------------------------------------------------
 		//
 		//  Protected methods
