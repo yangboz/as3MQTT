@@ -36,7 +36,7 @@ package com.godpaper.mqtt.as3.core
 	 * @airVersion 3.2+
 	 * Created Nov 20, 2012 10:49:53 AM
 	 */   	 
-	public class MQTT_Protocol
+	public class MQTT_Protocol extends ByteArray
 	{		
 		//--------------------------------------------------------------------------
 		//
@@ -102,7 +102,50 @@ package com.godpaper.mqtt.as3.core
 		//  Public methods
 		//
 		//--------------------------------------------------------------------------
+		public function writeBody(body:ByteArray):void
+		{
+			this.position = 1;
+			this.writeByte(body.length);
+			this.writeBytes(body);
+		}
 		
+		public function writeType(type:int):void
+		{
+			this.position = 0;
+			this.writeByte(type);
+			this.writeByte(0x00);
+		}
+		
+		public function isConnack():Boolean
+		{
+			this.position = 0;
+			var params:Array = [this.readByte(), this.readByte(), this.readByte(), this.readByte()];
+			return ( params[0] == CONNACK ) && params[3] ==0;
+		}
+		
+		//		public function isPuback():Boolean
+		//		{
+		//			this.position = 0;
+		//			return this.readUnsignedByte() == PUBACK;
+		//		}
+		//		
+		//		public function isSuback():Boolean
+		//		{
+		//			this.position = 0;
+		//			return this.readUnsignedByte() == SUBACK;
+		//		}
+		//		
+		//		public function isUnsuback():Boolean
+		//		{
+		//			this.position = 0;
+		//			return this.readUnsignedByte() == UNSUBACK;
+		//		}
+		//		
+		//		public function isPingResp():Boolean
+		//		{
+		//			this.position = 0;
+		//			return this.readUnsignedByte() == PINGRESP;
+		//		}
 		//--------------------------------------------------------------------------
 		//
 		//  Protected methods

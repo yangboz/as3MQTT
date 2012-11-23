@@ -35,10 +35,12 @@ package com.godpaper.mqtt.as3.impl
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
+	import flash.events.TimerEvent;
 	import flash.net.Socket;
 	import flash.system.Security;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
+	import flash.utils.Timer;
 	
 	/** Dispatched when a new MQTT server is connected. */
 	[Event(name="mqttConnect", type="flash.events.Event")]
@@ -102,10 +104,13 @@ package com.godpaper.mqtt.as3.impl
 		//MQTT byte array prepare.
 		//@see https://www.ibm.com/developerworks/mydeveloperworks/blogs/messaging/entry/write_your_own_mqtt_client_without_using_any_api_in_minutes1?lang=en
 		//First let's construct the MQTT messages that need to be sent:
-		private var connectMesage:ByteArray=new ByteArray();
-		private var publishMessage:ByteArray=new ByteArray();
+		private var connectMesage:MQTT_Protocol;
+		private var publishMessage:MQTT_Protocol;
 //		private var subscribeMessage:ByteArray=new ByteArray();
-		private var disconnectMessage:ByteArray=new ByteArray();
+		private var disconnectMessage:MQTT_Protocol;
+		private var pingMessage:MQTT_Protocol;
+		
+		private var timer:Timer;
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
@@ -153,36 +158,10 @@ package com.godpaper.mqtt.as3.impl
 			socket.addEventListener(IOErrorEvent.IO_ERROR, onError); //dispatched when an error occurs
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
-			//for connection
-			this.connectMesage.writeByte(0x10); //Connect
-			this.connectMesage.writeByte(0x0C + 0x04); //Remaining Length
-			this.connectMesage.writeByte(0x00); //0
-			this.connectMesage.writeByte(0x06); //6
-			this.connectMesage.writeByte(0x4d); //M
-			this.connectMesage.writeByte(0x51); //Q
-			this.connectMesage.writeByte(0x49); //I
-			this.connectMesage.writeByte(0x73); //S
-			this.connectMesage.writeByte(0x64); //D
-			this.connectMesage.writeByte(0x70); //P
-			this.connectMesage.writeByte(0x03); //Protocol version = 3
-			this.connectMesage.writeByte(0x02); //Clean session only
-			this.connectMesage.writeByte(0x00); //Keepalive MSB
-			this.connectMesage.writeByte(0x3c); //Keepalive LSB = 60
-			this.connectMesage.writeByte(0x00); //String length MSB
-			this.connectMesage.writeByte(0x02); //String length LSB = 2
-			this.connectMesage.writeByte(0x4d); //M
-			this.connectMesage.writeByte(0x70); //P .. Let's say client ID = MP
-			//for disconnect
-			this.disconnectMessage.writeByte(0x0E); //Disconnect// -0x7F+0x5F //Disconnect 
-			this.disconnectMessage.writeByte(0x00); //Disconnect
-			//for publish
-			this.publishMessage.writeByte(0x30); //Publish with QOS 0
-			this.publishMessage.writeByte(0x05 + 0x05); //Remaining length
-			this.publishMessage.writeByte(0x00); //MSB
-			this.publishMessage.writeByte(0x03); //3 bytes of topic
-			this.publishMessage.writeByte(0x61); //a
-			this.publishMessage.writeByte(0x2F); ///
-			this.publishMessage.writeByte(0x62); //b (a/b) is the topic
+			
+			timer = new Timer(5000);
+			timer.addEventListener(TimerEvent.TIMER, onPing);
+			
 //			this.publishMessage.writeUTFBytes("HELLO"); // (0x48, 0x45 , 0x4c , 0x4c, 0x4f); //HELLO is the message
 			//TODO:will
 			//TODO:payload
@@ -200,6 +179,29 @@ package com.godpaper.mqtt.as3.impl
 		public function publish(content:String,topicname:String,QoS:int=0,retain:String=null):void
 		{
 			//TODO:
+			var bytes:ByteArray = new ByteArray();
+			writeString(bytes, topicname);
+						
+			if( params.qos )
+			{
+				msgid++;
+				bytes.writeByte(msgid >> 8);
+				bytes.writeByte(msgid % 256 );
+			}
+						
+			writeString(bytes, content);
+					
+			var type:int = MQTT_Protocol.PUBLISH;
+			if( QoS ) type += QoS << 1;
+			if( retain ) type += 1;
+			this.publishMessage = new MQTT_Protocol();
+			this.publishMessage.writeType(type);
+			this.publishMessage.writeBody(bytes);
+						
+			socket.writeBytes(this.publishMessage);
+			socket.flush();
+					
+			trace( "Publish sent" );
 		}
 		override public function connect(host:String, port:int):void
 		{
@@ -211,7 +213,13 @@ package com.godpaper.mqtt.as3.impl
 		/* disconnect: sends a proper disconect cmd */
 		override public function close():void
 		{
+			if(this.disconnectMessage == null)
+			{
+				this.disconnectMessage = new MQTT_Protocol();
+				this.disconnectMessage.writeType(MQTT_Protocol.DISCONNECT);
+			}
 			socket.writeBytes(this.disconnectMessage, 0, this.disconnectMessage.length);
+			socket.flush()
 			socket.close();
 			//
 			super.close();
@@ -242,6 +250,38 @@ package com.godpaper.mqtt.as3.impl
 			{
 				throw new Error("Endian failed!");
 			}
+			if(this.connectMessage == null){
+				this.connectMessage = new MQTT_Protocol();
+				var bytes:ByteArray = new ByteArray();
+					bytes.writeByte(0x00); //0
+					bytes.writeByte(0x06); //6
+					bytes.writeByte(0x4d); //M
+					bytes.writeByte(0x51); //Q
+					bytes.writeByte(0x49); //I
+					bytes.writeByte(0x73); //S
+					bytes.writeByte(0x64); //D
+					bytes.writeByte(0x70); //P
+					bytes.writeByte(0x03); //Protocol version = 3
+				var type:int = 0;
+				if( clean ) type += 2;
+				if( will )
+				{
+					type += 4;
+					type += will['qos'] << 3;
+					if( will['retain'] ) type += 32;
+				}
+				if( username ) type += 128;
+				if( password ) type += 64;
+					bytes.writeByte(type); //Clean session only
+					bytes.writeByte(keepalive >> 8); //Keepalive MSB
+					bytes.writeByte(keepalive & 0xff); //Keepaliave LSB = 60
+					writeString(bytes, clientid);
+					writeString(bytes, username?username:"");
+					writeString(bytes, password?password:"");
+				this.connectMesage.writeType(MQTT_Protocol.CONNECT); //Connect
+				this.connectMesage.writeBody(bytes); //Connect
+			}
+			
 			trace("MQTT connectMesage.length:", this.connectMesage.length);
 			this.socket.writeBytes(this.connectMesage, 0, this.connectMesage.length);
 			this.socket.flush();
@@ -254,8 +294,8 @@ package com.godpaper.mqtt.as3.impl
 		{
 			// Security error is thrown if this line is excluded
 			trace(event);
-			socket.writeBytes(this.disconnectMessage, 0, this.disconnectMessage.length);
-			socket.close();
+			//socket.writeBytes(this.disconnectMessage, 0, this.disconnectMessage.length);
+			//socket.close();
 		}
 		
 		//
@@ -275,31 +315,61 @@ package com.godpaper.mqtt.as3.impl
 		{
 			trace("MQTT Socket received " + this.socket.bytesAvailable + " byte(s) of data:");
 			// Loop over all of the received data, and only read a byte if there  is one available 
-			var connack:Vector.<int> = new Vector.<int>();
-			while (socket.bytesAvailable)
-			{
-				// Read a byte from the socket and display it  
-				connack.push(socket.readByte());
-				//				data = socket.readInt();
-				//				trace(socket.readUTFBytes(socket.bytesAvailable).toString());
+			var result:MQTT_Protocol = new MQTT_Protocol();
+			socket.readBytes(result);
+			
+			switch(result.readUnsignedByte()){
+				case MQTT_Protocol.CONNACK:
+					result.position = 3;
+					if(result.isConnack())
+					{
+						trace( "Socket connected" );
+						servicing = true;
+						//dispatchEvent();
+						
+						timer.start();
+					}else{
+						trace( "Connection failed!" );
+						//dispatchEvent();
+					}
+					break;
+				case MQTT_Protocol.PUBACK:
+					trace( "Publish Acknowledgment" );
+					break;
+				case MQTT_Protocol.SUBACK:
+					trace( "Subscribe Acknowledgment" );
+					break;
+				case MQTT_Protocol.UNSUBACK:
+					trace( "Unsubscribe Acknowledgment" );
+					break;
+				case MQTT_Protocol.PINGRESP:
+					trace( "Ping Response" );
+					break;
+				default:
+					trace( "Other" );
 			}
-			//			To verify if the client has successfully connected let's receive the CONNACK from the server.
-			//			The connect return code is sent in the variable header of a CONNACK message.
-			//			This field defines a one byte unsigned return code. 
-			//			The meanings of the values, shown in the tables below, are specific to the message type. 
-			//			A return code of zero (0) usually indicates success.
-			trace(connack.toString());
-//			if(connack[0] == MQTT_Protocol.CONNACK && connack[2] == 0x00) 
-			if(connack[0] == MQTT_Protocol.CONNACK && connack[2] == MQTT_Protocol.CONNACK_ACCEPTED) 
+		}
+		
+		private function onPing(event:TimerEvent):void
+		{
+			if(this.pingMessage == null)
 			{
-				trace("MQTT connection success.");
-				//Connected ... So let's publish
-				this.socket.writeBytes(this.publishMessage,0,this.publishMessage.length);
-				this.socket.flush();
-			}else
-			{
-				throw new Error("MQTT connect failed!");
+				this.pingMessage = new MQTT_Protocol();
+				this.pingMessage.writeType(MQTT_Protocol.PINGREQ);
 			}
+			socket.writeBytes(this.pingMessage);
+			socket.flush();
+			trace("Ping sent");
+		}
+		
+		protected function writeString(bytes:ByteArray, str:String):void
+		{
+			var len:int = str.length;
+			var msb:int = len >>8;
+			var lsb:int = len % 256;
+			bytes.writeByte(msb);
+			bytes.writeByte(lsb);
+			bytes.writeMultiByte(str, 'utf-8');
 		}
 	}
 	
