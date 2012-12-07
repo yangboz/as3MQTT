@@ -46,12 +46,18 @@ package com.godpaper.mqtt.as3.impl
 	
 	import mx.logging.ILogger;
 
-//TODO:event metdata declare
-//	/** Dispatched when a new MQTT server is connected. */
-//	[Event(name="mqttConnect", type="flash.events.Event")]
-//	
-//	/** Dispatched when a new  MQTT server is closed. */
-//	[Event(name="mqttClose", type="flash.events.Event")]
+//event metdata declare
+	/** Dispatched when a new MQTT server is connected. */
+	[Event(name="mqttConnect", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new  MQTT server is closed. */
+	[Event(name="mqttClose", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new MQTT server is messag-ed. */
+	[Event(name="mqttMessage", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new  MQTT server is error-ed. */
+	[Event(name="mqttError", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
 	/**
 	 * Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </br>
 	 * AS3 socket is a mechanism used to send data over a network (e.g. the Internet), it is the combination of an IP address and a port. </br>
