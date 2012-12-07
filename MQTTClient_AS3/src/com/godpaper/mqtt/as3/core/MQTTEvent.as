@@ -74,6 +74,8 @@ package com.godpaper.mqtt.as3.core
 		public function MQTTEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false,message:String=null)
 		{
 			super(type, bubbles, cancelable);
+			//
+			this.message = message;
 		}     	
 		//--------------------------------------------------------------------------
 		//

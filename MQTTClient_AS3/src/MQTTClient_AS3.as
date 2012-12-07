@@ -26,6 +26,7 @@ package
 	//  Imports
 	//
 	//--------------------------------------------------------------------------
+	import com.godpaper.as3.utils.LogUtil;
 	import com.godpaper.mqtt.as3.core.MQTTEvent;
 	import com.godpaper.mqtt.as3.impl.MQTTSocket;
 	import com.godpaper.mqtt.as3.utils.UIDUtil;
@@ -39,13 +40,16 @@ package
 	import flash.system.Security;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
-
+	
+	import mx.logging.ILogger;
+	
 	/**
 	 * Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </br>
 	 * AS3 socket is a mechanism used to send data over a network (e.g. the Internet), it is the combination of an IP address and a port. </br>
 	 * @see https://github.com/yangboz/as3MQTT
 	 * @see https://github.com/yangboz/as3MQTT/wiki
-	 *
+	 * @see https://github.com/yangboz/as3Logger
+	 * 
 	 * @author yangboz
 	 * @langVersion 3.0
 	 * @playerVersion 11.2+
@@ -64,8 +68,10 @@ package
 		//  CONSTANTS
 		//----------------------------------
 		//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
-		private static const MY_HOST:String="test.mosquitto.org"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
+		private static const MY_HOST:String="16.157.65.23"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
 		private static const MY_PORT:Number=1883; //Socket port.
+		//as3Logger
+		private static const LOG:ILogger = LogUtil.getLogger(MQTTClient_AS3);
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties
@@ -119,26 +125,26 @@ package
 		//
 		private function onConnect(event:Event):void
 		{
-			trace("MQTT connect: ",event);
+			LOG.info("MQTT connect: {0}",event);
 		}
 
 		//
 		private function onClose(event:Event):void
 		{
-			trace("MQTT close: ",event);
+			LOG.info("MQTT close: {0}",event);
 		}
 
 		//
 		private function onError(event:MQTTEvent):void
 		{
-			trace("MQTT Error: ",event);
+			LOG.info("MQTT Error: {0}",event);
 		}
 
 
 		//
 		private function onMessage(event:MQTTEvent):void
 		{
-			trace("MQTT message: ",event.message);
+			LOG.info("MQTT message: {0}",event.message);
 		}
 
 	}
