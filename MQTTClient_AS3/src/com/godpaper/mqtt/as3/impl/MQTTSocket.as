@@ -26,6 +26,7 @@ package com.godpaper.mqtt.as3.impl
 	//  Imports
 	//
 	//--------------------------------------------------------------------------
+	import com.godpaper.as3.utils.LogUtil;
 	import com.godpaper.mqtt.as3.core.MQTTEvent;
 	import com.godpaper.mqtt.as3.core.MQTT_Protocol;
 	import com.godpaper.mqtt.as3.utils.UIDUtil;
@@ -42,12 +43,21 @@ package com.godpaper.mqtt.as3.impl
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
-//TODO:event metdata declare
-//	/** Dispatched when a new MQTT server is connected. */
-//	[Event(name="mqttConnect", type="flash.events.Event")]
-//	
-//	/** Dispatched when a new  MQTT server is closed. */
-//	[Event(name="mqttClose", type="flash.events.Event")]
+	
+	import mx.logging.ILogger;
+
+//event metdata declare
+	/** Dispatched when a new MQTT server is connected. */
+	[Event(name="mqttConnect", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new  MQTT server is closed. */
+	[Event(name="mqttClose", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new MQTT server is messag-ed. */
+	[Event(name="mqttMessage", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new  MQTT server is error-ed. */
+	[Event(name="mqttError", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
 	/**
 	 * Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </br>
 	 * AS3 socket is a mechanism used to send data over a network (e.g. the Internet), it is the combination of an IP address and a port. </br>
@@ -119,6 +129,8 @@ package com.godpaper.mqtt.as3.impl
 		//----------------------------------
 		private static const MAX_LEN_UUID:int = 16;
 		private static const MAX_LEN_TOPIC:int = 7;
+		//as3Logger
+		private static const LOG:ILogger = LogUtil.getLogger(MQTTSocket);
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties
@@ -169,6 +181,10 @@ package com.godpaper.mqtt.as3.impl
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
 			//Timer for ping function.
+<<<<<<< HEAD
+=======
+//			timer = new Timer(5000);
+>>>>>>> 8b13ee8ab71406021a77b1c17c29520e5ffda04a
 			timer = new Timer(keepalive / 2 * 1000);
 			timer.addEventListener(TimerEvent.TIMER, onPing);
 			
@@ -217,7 +233,7 @@ package com.godpaper.mqtt.as3.impl
 			socket.writeBytes(this.publishMessage);
 			socket.flush();
 					
-			trace( "Publish sent" );
+			LOG.info("Publish sent" );
 		}
 	    public function connect(host:String=null, port:int=0):void
 		{
@@ -267,7 +283,7 @@ package com.godpaper.mqtt.as3.impl
 			//			socket.writeUTFBytes("Host: hejp.co.uk\n");
 			//			socket.writeUTFBytes("\n");
 			//			All data values are in big-endian order: higher order bytes precede lower order bytes.
-			trace("MQTT byte order:",this.socket.endian);
+			LOG.info("MQTT byte order:{0}",this.socket.endian);
 			if (this.socket.endian != Endian.BIG_ENDIAN)
 			{
 				throw new Error("Endian failed!");
@@ -304,7 +320,7 @@ package com.godpaper.mqtt.as3.impl
 				this.connectMessage.writeBody(bytes); //Connect
 			}
 			
-			trace("MQTT connectMesage.length:", this.connectMessage.length);
+			LOG.info("MQTT connectMesage.length:{0}", this.connectMessage.length);
 			this.socket.writeBytes(this.connectMessage, 0, this.connectMessage.length);
 			this.socket.flush();
 			//dispatch event
@@ -317,12 +333,14 @@ package com.godpaper.mqtt.as3.impl
 			// Security error is thrown if this line is excluded
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE,false,false));
+			//Other dispose staff
+			
 		}
 		
 		//
 		private function onError(event:IOErrorEvent):void
 		{
-			trace("MQTT IO Error: " + event);
+			LOG.error("MQTT IO Error: {0}",event);
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
 		}
@@ -330,7 +348,7 @@ package com.godpaper.mqtt.as3.impl
 		//
 		private function onSecError(event:SecurityErrorEvent):void
 		{
-			trace("MQTT Security Error: " + event);
+			LOG.error("MQTT Security Error: {0}",event);
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
 		}
@@ -338,42 +356,46 @@ package com.godpaper.mqtt.as3.impl
 		//
 		private function onSocketData(event:ProgressEvent):void
 		{
-			trace("MQTT Socket received " + this.socket.bytesAvailable + " byte(s) of data:");
+			LOG.info("MQTT Socket received {0}{1}",this.socket.bytesAvailable," byte(s) of data.");
 			// Loop over all of the received data, and only read a byte if there  is one available 
 			var result:MQTT_Protocol = new MQTT_Protocol();
 			socket.readBytes(result);
-			
+			//
 			switch(result.readUnsignedByte()){
 				case MQTT_Protocol.CONNACK:
 					result.position = 3;
 					if(result.isConnack())
 					{
-						trace( "Socket connected" );
+						LOG.info( "Socket connected!" );
 						servicing = true;
 						//dispatchEvent();
-						this.dispatchEvent(new MQTTEvent(MQTTEvent.MESSGE,false,false,result.toString()));
+						if(result.toString())//The event with message dispatched.
+						{
+							this.dispatchEvent(new MQTTEvent(MQTTEvent.MESSGE,false,false,result.toString()));
+						}
 						//
 						timer.start();
 					}else{
-						trace( "Connection failed!" );
+						LOG.info( "Connection failed!" );
 						//dispatchEvent();
 						this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
 					}
 					break;
 				case MQTT_Protocol.PUBACK:
-					trace( "Publish Acknowledgment" );
+					LOG.info( "Publish Acknowledgment!" );
 					break;
 				case MQTT_Protocol.SUBACK:
-					trace( "Subscribe Acknowledgment" );
+					LOG.info( "Subscribe Acknowledgment!" );
 					break;
 				case MQTT_Protocol.UNSUBACK:
-					trace( "Unsubscribe Acknowledgment" );
+					LOG.info( "Unsubscribe Acknowledgment!" );
 					break;
 				case MQTT_Protocol.PINGRESP:
-					trace( "Ping Response" );
+					LOG.info( "Ping Response." );
 					break;
 				default:
-					trace( "Others." );
+					break;
+//					trace( "Others." );
 			}
 		}
 		//
@@ -386,7 +408,7 @@ package com.godpaper.mqtt.as3.impl
 			}
 			socket.writeBytes(this.pingMessage);
 			socket.flush();
-			trace("Ping sent");
+			LOG.info("Ping sent.");
 		}
 		//
 		private function shortenString(str:String,len:int):String
