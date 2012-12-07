@@ -22,7 +22,6 @@
 package com.godpaper.mqtt.as3.core
 {
 	import flash.utils.ByteArray;
-
 	//--------------------------------------------------------------------------
 	//
 	//  Imports
@@ -81,6 +80,10 @@ package com.godpaper.mqtt.as3.core
 		public static const CONNACK_REFUSED_NOT_AUTHORIZED:int = 5;
 		
 		public static const MQTT_MAX_PAYLOAD:int = 268435455;
+		
+		protected var fixHead:ByteArray;
+		protected var varHead:ByteArray;
+		
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties
@@ -118,36 +121,28 @@ package com.godpaper.mqtt.as3.core
 			this.writeByte(0x00);
 		}
 		
-		public function isConnack():Boolean
+		public function readBody():ByteArray
 		{
 			this.position = 0;
-			var params:Array = [this.readByte(), this.readByte(), this.readByte(), this.readByte()];
-			return ( params[0] == CONNACK ) && params[3] ==0;
+			if( varHead == null && this.length > 2 ){
+				varHead = new ByteArray();
+				
+				this.readBytes(varHead, 2);
+			}
+			return varHead;
 		}
 		
-		//		public function isPuback():Boolean
-		//		{
-		//			this.position = 0;
-		//			return this.readUnsignedByte() == PUBACK;
-		//		}
-		//		
-		//		public function isSuback():Boolean
-		//		{
-		//			this.position = 0;
-		//			return this.readUnsignedByte() == SUBACK;
-		//		}
-		//		
-		//		public function isUnsuback():Boolean
-		//		{
-		//			this.position = 0;
-		//			return this.readUnsignedByte() == UNSUBACK;
-		//		}
-		//		
-		//		public function isPingResp():Boolean
-		//		{
-		//			this.position = 0;
-		//			return this.readUnsignedByte() == PINGRESP;
-		//		}
+		public function readType():ByteArray
+		{
+			this.position = 0;
+			if( fixHead == null && this.length > 0 ){
+				fixHead = new ByteArray();
+				
+				this.readBytes(fixHead, 0, 2);
+			}
+			return fixHead;
+		}
+		
 		//--------------------------------------------------------------------------
 		//
 		//  Protected methods

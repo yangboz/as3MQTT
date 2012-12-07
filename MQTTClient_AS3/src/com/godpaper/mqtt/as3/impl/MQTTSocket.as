@@ -45,6 +45,9 @@ package com.godpaper.mqtt.as3.impl
 	import flash.utils.Timer;
 	
 	import mx.logging.ILogger;
+	
+	import cn.royan.fl.events.DatasEvent;
+	import cn.royan.fl.utils.SystemUtils;
 
 //event metdata declare
 	/** Dispatched when a new MQTT server is connected. */
@@ -181,10 +184,7 @@ package com.godpaper.mqtt.as3.impl
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
 			//Timer for ping function.
-<<<<<<< HEAD
-=======
-//			timer = new Timer(5000);
->>>>>>> 8b13ee8ab71406021a77b1c17c29520e5ffda04a
+			
 			timer = new Timer(keepalive / 2 * 1000);
 			timer.addEventListener(TimerEvent.TIMER, onPing);
 			
@@ -361,25 +361,9 @@ package com.godpaper.mqtt.as3.impl
 			var result:MQTT_Protocol = new MQTT_Protocol();
 			socket.readBytes(result);
 			//
-			switch(result.readUnsignedByte()){
+			switch(result.readType().readUnsignedByte()){
 				case MQTT_Protocol.CONNACK:
-					result.position = 3;
-					if(result.isConnack())
-					{
-						LOG.info( "Socket connected!" );
-						servicing = true;
-						//dispatchEvent();
-						if(result.toString())//The event with message dispatched.
-						{
-							this.dispatchEvent(new MQTTEvent(MQTTEvent.MESSGE,false,false,result.toString()));
-						}
-						//
-						timer.start();
-					}else{
-						LOG.info( "Connection failed!" );
-						//dispatchEvent();
-						this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
-					}
+					onConnack(result);
 					break;
 				case MQTT_Protocol.PUBACK:
 					LOG.info( "Publish Acknowledgment!" );
@@ -396,6 +380,46 @@ package com.godpaper.mqtt.as3.impl
 				default:
 					break;
 //					trace( "Others." );
+			}
+		}
+		
+		protected function onConnack(packet):void
+		{
+			var varHead:ByteArray = packet.readMessageValue();
+				varHead.position = 1;
+			switch(varHead.readUnsignedByte()){
+				case 0x00:
+					LOG.info("Socket connected");
+					servicing = true;
+					timer.start();
+					
+					this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false));
+					break;
+				case 0x01:
+					LOG.info("Connection Refused: unacceptable protocol version");
+					
+					this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false,"Connection Refused: unacceptable protocol version"));
+					break;
+				case 0x02:
+					LOG.info("Connection Refused: identifier rejected");
+					
+					this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false,"Connection Refused: identifier rejected"));
+					break;
+				case 0x03:
+					LOG.info("Connection Refused: server unavailable");
+					
+					this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false,"Connection Refused: server unavailable"));
+					break;
+				case 0x04:
+					LOG.info("Connection Refused: bad user name or password");
+					
+					this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false,"Connection Refused: bad user name or password"));
+					break;
+				case 0x05:
+					LOG.info("Connection Refused: not authorized");
+					
+					this.dispatchEvent(new MQTTEvent(MQTTEvent.ERROR,false,false,"Connection Refused: not authorized"));
+					break;
 			}
 		}
 		//
