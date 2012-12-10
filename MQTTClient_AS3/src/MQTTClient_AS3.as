@@ -127,21 +127,21 @@ package
 		//
 		//--------------------------------------------------------------------------
 		//
-		private function onConnect(event:Event):void
+		private function onConnect(event:MQTTEvent):void
 		{
-			LOG.info("MQTT connect: {0}",event);
+			LOG.info("MQTT connect: {0}",event.message);
 		}
 
 		//
-		private function onClose(event:Event):void
+		private function onClose(event:MQTTEvent):void
 		{
-			LOG.info("MQTT close: {0}",event);
+			LOG.info("MQTT close: {0}",event.message);
 		}
 
 		//
 		private function onError(event:MQTTEvent):void
 		{
-			LOG.info("MQTT Error: {0}",event);
+			LOG.info("MQTT Error: {0}",event.message);
 		}
 
 
