@@ -30,17 +30,9 @@ package
 	import com.godpaper.as3.utils.LogUtil;
 	import com.godpaper.mqtt.as3.core.MQTTEvent;
 	import com.godpaper.mqtt.as3.impl.MQTTSocket;
-	import com.godpaper.mqtt.as3.utils.UIDUtil;
 	
 	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.events.IOErrorEvent;
-	import flash.events.ProgressEvent;
-	import flash.events.SecurityErrorEvent;
-	import flash.net.Socket;
 	import flash.system.Security;
-	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 	
 	import mx.logging.ILogger;
 	import mx.logging.LogEventLevel;
@@ -70,7 +62,7 @@ package
 		//  CONSTANTS
 		//----------------------------------
 		//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
-		private static const MY_HOST:String="16.157.65.23"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
+		private static const MY_HOST:String="test.mosquitto.org"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
 		private static const MY_PORT:Number=1883; //Socket port.
 		//as3Logger
 //		LoggerConfig.filters = ["MQTTClient_AS3"];
