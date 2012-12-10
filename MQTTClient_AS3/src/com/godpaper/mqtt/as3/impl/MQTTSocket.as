@@ -99,7 +99,7 @@ package com.godpaper.mqtt.as3.impl
 		 * with a CONNACK return code 2: Identifier Rejected..</br>
 		 */
 		public var clientid:String; /* client id sent to brocker */
-		public var will:uint; /* stores the will of the client {willFlag,willQos,willRetainFlag} */
+		public var will:Array; /* stores the will of the client {willFlag,willQos,willRetainFlag} */
 		public var username:String; /* stores username */
 		public var password:String; /* stores password */
 		public var QoS:int=0; /* stores QoS level */
@@ -121,7 +121,7 @@ package com.godpaper.mqtt.as3.impl
 //		private var subscribeMessage:ByteArray=new ByteArray();
 		private var disconnectMessage:MQTT_Protocol;
 		private var pingMessage:MQTT_Protocol;
-		//
+		//The Keep Alive timer is present in the variable header of a MQTT CONNECT message.
 		private var keep_alive_timer:Timer; //Set to 10 seconds (0x000A).
 		private var servicing:Boolean; /*service indicator*/
 		//----------------------------------
@@ -129,6 +129,13 @@ package com.godpaper.mqtt.as3.impl
 		//----------------------------------
 		private static const MAX_LEN_UUID:int=16;
 		private static const MAX_LEN_TOPIC:int=7;
+		private static const MAX_LEN_USERNAME:int=12;
+		//Topic level separator
+		public static const TOPIC_LEVEL_SEPARATOR:String = "/";
+		//Multi-level wildcard
+		public static const TOPIC_M_LEVEL_WILDCARD:String = "#";
+		//Single-level wildcard
+		public static const TOPIC_S_LEVEL_WILDCARD:String = "+";
 		//as3Logger
 		private static const LOG:ILogger=LogUtil.getLogger(MQTTSocket);
 
@@ -175,6 +182,9 @@ package com.godpaper.mqtt.as3.impl
 			{
 				if (this.topicname.length > MAX_LEN_TOPIC)
 					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
+				var pattern:RegExp = /\/|\+|\#/;
+				if (this.topicname.search(pattern) != -1)
+					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
 				this.topicname=topicname;
 			}
 			if (clientid)
@@ -189,14 +199,24 @@ package com.godpaper.mqtt.as3.impl
 				this.clientid=this.shortenString(this.clientid, MAX_LEN_UUID);
 			}
 			//Any out of range issue???
+			//It is recommended that user names are kept to 12 characters or
+			//fewer, but it is not required.
 			if (username)
+			{
+				if (this.topicname.length > MAX_LEN_USERNAME)
+					throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
 				this.username=username;
+			}
 			if (password)
+			{
+				if (this.topicname.length > MAX_LEN_USERNAME)
+					throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
 				this.password=password;
+			}
 			//			this.publishMessage.writeUTFBytes("HELLO"); // (0x48, 0x45 , 0x4c , 0x4c, 0x4f); //HELLO is the message
 			//Will flag/Qos/Retain
 			if (will)
-				this.will = will;
+				this.will = MQTT_Protocol.WILL;
 			//Clean Session flag,Set (1).
 			if (cleanSession)
 				this.cleanSession = cleanSession;
@@ -211,7 +231,8 @@ package com.godpaper.mqtt.as3.impl
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData); //dispatched when socket can be read
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecError); //dispatched when security gets in the way
 			//Timer for ping function.
-
+			//If a client does not receive a PINGRESP message within a Keep Alive time period after
+			//sending a PINGREQ, it should close the TCP/IP socket connection.
 			keep_alive_timer=new Timer(keepalive / 2 * 1000);
 			keep_alive_timer.addEventListener(TimerEvent.TIMER, onPing);
 
@@ -332,6 +353,7 @@ package com.godpaper.mqtt.as3.impl
 				bytes.writeByte(0x64); //D
 				bytes.writeByte(0x70); //P
 				bytes.writeByte(0x03); //Protocol version = 3
+				//Connect flags
 				var type:int=0;
 				if (cleanSession)
 					type+=2;
@@ -341,8 +363,8 @@ package com.godpaper.mqtt.as3.impl
 				if (will)//(willFlag,willQos,willRetain)
 				{
 					type+=4;
-					type+=will['qos'] << 3;
-					if (will['retain'])
+					type+=this.will['qos'] << 3;
+					if (this.will['retain'])
 						type+=32;
 				}
 				if (username)
@@ -350,6 +372,7 @@ package com.godpaper.mqtt.as3.impl
 				if (password)
 					type+=64;
 				bytes.writeByte(type); //Clean session only
+				//Keep Alive timer
 				bytes.writeByte(keepalive >> 8); //Keepalive MSB
 				bytes.writeByte(keepalive & 0xff); //Keepaliave LSB = 60
 				writeString(bytes, clientid);
@@ -358,7 +381,7 @@ package com.godpaper.mqtt.as3.impl
 				this.connectMessage.writeType(MQTT_Protocol.CONNECT); //Connect
 				this.connectMessage.writeBody(bytes); //Connect
 			}
-
+			//
 			LOG.info("MQTT connectMesage.length:{0}", this.connectMessage.length);
 			this.socket.writeBytes(this.connectMessage, 0, this.connectMessage.length);
 			this.socket.flush();
@@ -372,8 +395,8 @@ package com.godpaper.mqtt.as3.impl
 			// Security error is thrown if this line is excluded
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE, false, false));
-			//Other dispose staff
-
+			//TODO:Other dispose staff
+			
 		}
 
 		//

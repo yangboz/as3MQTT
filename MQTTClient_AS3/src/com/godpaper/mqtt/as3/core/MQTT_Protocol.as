@@ -84,7 +84,15 @@ package com.godpaper.mqtt.as3.core
 
 		protected var fixHead:ByteArray;
 		protected var varHead:ByteArray;
-
+		///* stores the will of the client {willFlag,willQos,willRetainFlag} */
+		public static var WILL:Array;
+		/* static block */
+		{
+			WILL = [];
+			//fake manual writing (big-endian)
+			WILL['qos'] = 0x01;
+			WILL['retain'] = 0x00;
+		}
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties
