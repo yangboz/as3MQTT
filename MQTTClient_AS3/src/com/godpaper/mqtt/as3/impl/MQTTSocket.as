@@ -436,7 +436,7 @@ package com.godpaper.mqtt.as3.impl
 			var result:MQTT_Protocol=new MQTT_Protocol();
 			socket.readBytes(result);
 			//
-			switch (result.readType().readUnsignedByte())
+			switch (result.readyMessageType())
 			{
 				case MQTT_Protocol.CONNACK:
 					onConnack(result);
@@ -499,8 +499,8 @@ package com.godpaper.mqtt.as3.impl
 		//The CONNACK message is the message sent by the server in response to a CONNECT request from a client.
 		protected function onConnack(packet:MQTT_Protocol):void
 		{
-			var varHead:ByteArray=packet.readMessageValue();
-			varHead.position=1;
+			var varHead:ByteArray=packet.readVarHead();
+				varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
 				case 0x00:
@@ -548,7 +548,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -568,7 +568,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -586,7 +586,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -604,7 +604,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -622,7 +622,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -640,7 +640,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -658,7 +658,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -676,7 +676,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -694,7 +694,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray=packet.readVarHead();
 			varHead.position=1;
 			switch (varHead.readUnsignedByte())
 			{
@@ -708,55 +708,49 @@ package com.godpaper.mqtt.as3.impl
 		//TODO:
 		protected function onPingreg(packet:MQTT_Protocol):void
 		{
-			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
+			//Only Fixed header
+			switch (packet.readRemainingLength())
 			{
 				case 0x00:
 					break;
 				default:
 					break;
 			}
+			//Variable header
+			//Payload
+			//Actions
 		}
 
 		//TODO:
 		protected function onPingesp(packet:MQTT_Protocol):void
 		{
-			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
+			//Only Fixed header
+			switch (packet.readRemainingLength())
 			{
 				case 0x00:
 					break;
 				default:
 					break;
 			}
+			//Variable header
+			//Payload
+			//Actions
 		}
 		
 		//TODO:
 		protected function onDisconnect(packet:MQTT_Protocol):void
 		{
-			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
+			//Only Fixed header
+			switch (packet.readRemainingLength())
 			{
 				case 0x00:
 					break;
 				default:
 					break;
 			}
+			//Variable header
+			//Payload
+			//Actions
 		}
 		//--------------------------------------------------------------------------
 		//

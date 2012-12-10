@@ -84,6 +84,13 @@ package com.godpaper.mqtt.as3.core
 
 		protected var fixHead:ByteArray;
 		protected var varHead:ByteArray;
+		
+		protected var messageType:uint;
+		protected var dup:uint;
+		protected var qos:uint;
+		protected var retain:uint;
+		protected var remainingLength:uint;
+		
 		///* stores the will of the client {willFlag,willQos,willRetainFlag} */
 		public static var WILL:Array;
 		/* static block */
@@ -91,7 +98,7 @@ package com.godpaper.mqtt.as3.core
 			WILL = [];
 			//fake manual writing (big-endian)
 			WILL['qos'] = 0x01;
-			WILL['retain'] = 0x00;
+			WILL['retain'] = 0x01;
 		}
 		//--------------------------------------------------------------------------
 		//
@@ -123,17 +130,50 @@ package com.godpaper.mqtt.as3.core
 			this.writeByte(body.length);
 			this.writeBytes(body);
 		}
-
-		//
-		public function writeType(type:int):void
+		
+		public function writeType(value:uint):void
 		{
-			this.position=0;
-			this.writeByte(type);
+			this.position = 0;
+			this.writeByte(value);
 			this.writeByte(0x00);
+			
+			messageType = value & 0xF0;
+			dup = (value >> 3) & 0x01;
+			qos = (value >> 1) & 0x03;
+			retain = value & 0x01;
 		}
-
+		
 		//
-		public function readBody():ByteArray
+		public function writeMessageType(value:uint):void
+		{
+			messageType = value;
+			this.position=0;
+			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+		}
+		
+		public function writeDUP(value:uint):void
+		{
+			dup = value;
+			this.position=0;
+			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+		}
+		
+		public function writeQoS(value:uint):void
+		{
+			qos = value;
+			this.position=0;
+			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+		}
+		
+		public function writeRETIAN(value:uint):void
+		{
+			retain = value;
+			this.position=0;
+			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+		}
+		
+		//
+		public function readVarHead():ByteArray
 		{
 			this.position=0;
 			if (varHead == null && this.length > 2)
@@ -146,29 +186,34 @@ package com.godpaper.mqtt.as3.core
 		}
 
 		//
-		public function readType():ByteArray
+		public function readyMessageType():uint
 		{
 			this.position=0;
-			if (fixHead == null && this.length > 0)
-			{
-				fixHead=new ByteArray();
-
-				this.readBytes(fixHead, 0, 2);
-			}
-			return fixHead;
+			return this.readUnsignedByte() & 0xF0;
 		}
-
-		//TODO:
-		public function readMessageValue():ByteArray
+		
+		public function readDUP():uint
 		{
 			this.position=0;
-			if (fixHead == null && this.length > 0)
-			{
-				fixHead=new ByteArray();
-
-				this.readBytes(fixHead, 2, 2);
-			}
-			return fixHead;
+			return this.readUnsignedByte() >> 3 & 0x01;
+		}
+		
+		public function readyQoS():uint
+		{
+			this.position=0;
+			return this.readUnsignedByte() >> 1 & 0x03;
+		}
+		
+		public function readyRETAIN():uint
+		{
+			this.position=0;
+			return this.readUnsignedByte() & 0x01;
+		}
+		
+		public function readRemainingLength():uint
+		{
+			this.position = 1;
+			return this.readUnsignedByte();
 		}
 		//--------------------------------------------------------------------------
 		//
