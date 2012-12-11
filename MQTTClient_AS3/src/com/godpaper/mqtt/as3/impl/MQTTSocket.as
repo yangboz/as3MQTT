@@ -119,6 +119,7 @@ package com.godpaper.mqtt.as3.impl
 		private var connectMessage:MQTT_Protocol;
 		private var publishMessage:MQTT_Protocol;
 		private var subscribeMessage:MQTT_Protocol;
+		private var unsubscribeMessage:MQTT_Protocol;
 		private var disconnectMessage:MQTT_Protocol;
 		private var pingMessage:MQTT_Protocol;
 		//The Keep Alive timer is present in the variable header of a MQTT CONNECT message.
@@ -244,7 +245,7 @@ package com.godpaper.mqtt.as3.impl
 		//
 		//--------------------------------------------------------------------------
 		//
-		public function subscribe(topicnames:Vector.<String>, Qoss:Vector.<int>, QoS:int=2):void
+		public function subscribe(topicnames:Vector.<String>, Qoss:Vector.<int>, QoS:int=0):void
 		{
 			//subscribe list store,and subscribe to socket server.
 			var varHead:ByteArray = new ByteArray();//varHead
@@ -280,7 +281,43 @@ package com.godpaper.mqtt.as3.impl
 			//
 			LOG.info("Subscribe sent");
 		}
-
+		
+		public function unsubscribe(topicnames:Vector.<String>, QoS:int=0):void
+		{
+			//unubscribe list store,and unubscribe to socket server.
+			var varHead:ByteArray = new ByteArray();//varHead
+			if (QoS)
+			{
+				msgid++;
+				varHead.writeByte(msgid >> 8);
+				varHead.writeByte(msgid % 256);
+			}
+			varHead.position = 0;
+			var payload:ByteArray = new ByteArray();//payload
+			var i:int;
+			for(i = 0; i < topicnames.length; i++){
+				if (topicnames[i].length > MAX_LEN_TOPIC)
+					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
+				
+				writeString(payload, topicnames[i]);
+			}
+			//TODO:send unubscribe message
+			var type:int=MQTT_Protocol.SUBSCRIBE;
+			if (QoS)
+				type+=QoS << 1;
+			this.unsubscribeMessage=new MQTT_Protocol();
+			this.unsubscribeMessage.writeType(type);
+			this.unsubscribeMessage.writeBody(varHead);
+			this.unsubscribeMessage.writeRemainingLength(payload.length);
+			this.unsubscribeMessage.position = 4;
+			this.unsubscribeMessage.writeBytes(payload);
+			//There is something wrong below,socket don't work
+//			socket.writeBytes(this.unsubscribeMessage);
+//			socket.flush();
+//
+			LOG.info("UnSsbscribe sent");
+		}
+		
 		//
 		public function publish(content:String, topicname:String, QoS:int=0, retain:String=null):void
 		{
