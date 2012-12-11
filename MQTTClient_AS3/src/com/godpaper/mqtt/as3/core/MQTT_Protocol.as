@@ -126,8 +126,9 @@ package com.godpaper.mqtt.as3.core
 		//
 		public function writeBody(body:ByteArray):void
 		{
-			this.position=1;
-			this.writeByte(body.length);
+			remainingLength = body.length;
+			
+			writeType(messageType + (dup << 3) + (qos << 1) + retain);
 			this.writeBytes(body);
 		}
 		
@@ -135,7 +136,7 @@ package com.godpaper.mqtt.as3.core
 		{
 			this.position = 0;
 			this.writeByte(value);
-			this.writeByte(0x00);
+			this.writeByte(remainingLength);
 			
 			messageType = value & 0xF0;
 			dup = (value >> 3) & 0x01;
@@ -147,29 +148,31 @@ package com.godpaper.mqtt.as3.core
 		public function writeMessageType(value:uint):void
 		{
 			messageType = value;
-			this.position=0;
-			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+			writeType(messageType + (dup << 3) + (qos << 1) + retain);
 		}
 		
 		public function writeDUP(value:uint):void
 		{
 			dup = value;
-			this.position=0;
-			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+			writeType(messageType + (dup << 3) + (qos << 1) + retain);
 		}
 		
 		public function writeQoS(value:uint):void
 		{
 			qos = value;
-			this.position=0;
-			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+			writeType(messageType + (dup << 3) + (qos << 1) + retain);
 		}
 		
 		public function writeRETIAN(value:uint):void
 		{
 			retain = value;
-			this.position=0;
-			this.writeByte(messageType + (dup << 3) + (qos << 1) + retain);
+			writeType(messageType + (dup << 3) + (qos << 1) + retain);
+		}
+		
+		public function writeRemainingLength(value:uint):void
+		{
+			remainingLength = value;
+			writeType(messageType + (dup << 3) + (qos << 1) + retain);
 		}
 		
 		//
@@ -179,8 +182,9 @@ package com.godpaper.mqtt.as3.core
 			if (varHead == null && this.length > 2)
 			{
 				varHead=new ByteArray();
-
-				this.readBytes(varHead, 2);
+				this.position = 2;
+				this.readBytes(varHead);
+				varHead.position = 0;
 			}
 			return varHead;
 		}

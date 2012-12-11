@@ -124,6 +124,9 @@ package
 		private function onConnect(event:MQTTEvent):void
 		{
 			LOG.info("MQTT connect: {0}",event.message);
+			
+//			mqttSocket.publish("asdfasdf","Test",1);
+//			mqttSocket.subscribe(Vector.<String>(["a/b","c/d"]),Vector.<int>([1,2]));
 		}
 
 		//

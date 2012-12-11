@@ -102,7 +102,7 @@ package com.godpaper.mqtt.as3.impl
 		public var will:Array; /* stores the will of the client {willFlag,willQos,willRetainFlag} */
 		public var username:String; /* stores username */
 		public var password:String; /* stores password */
-		public var QoS:int=0; /* stores QoS level */
+//		public var QoS:int=0; /* stores QoS level */ conflict with param of function
 		public var cleanSession:Boolean=true; /* as3 socket fluse auto clean */
 		/**
 		 * The topic name is present in the variable header of an MQTT PUBLISH message.</br>
@@ -118,7 +118,7 @@ package com.godpaper.mqtt.as3.impl
 		//First let's construct the MQTT messages that need to be sent:
 		private var connectMessage:MQTT_Protocol;
 		private var publishMessage:MQTT_Protocol;
-//		private var subscribeMessage:ByteArray=new ByteArray();
+		private var subscribeMessage:MQTT_Protocol;
 		private var disconnectMessage:MQTT_Protocol;
 		private var pingMessage:MQTT_Protocol;
 		//The Keep Alive timer is present in the variable header of a MQTT CONNECT message.
@@ -244,16 +244,41 @@ package com.godpaper.mqtt.as3.impl
 		//
 		//--------------------------------------------------------------------------
 		//
-		public function subscribe(topicname:String, Qos:int=0):void
+		public function subscribe(topicnames:Vector.<String>, Qoss:Vector.<int>, QoS:int=2):void
 		{
 			//subscribe list store,and subscribe to socket server.
-			if (topicname.length > MAX_LEN_TOPIC)
-				throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
-			if (this.topics.indexOf(topicname) == -1)
+			var varHead:ByteArray = new ByteArray();//varHead
+			if (QoS)
 			{
-				this.topics.push(topicname);
+				msgid++;
+				varHead.writeByte(msgid >> 8);
+				varHead.writeByte(msgid % 256);
+			}
+			varHead.position = 0;
+			var payload:ByteArray = new ByteArray();//payload
+			var i:int;
+			for(i = 0; i < topicnames.length; i++){
+				if (topicnames[i].length > MAX_LEN_TOPIC)
+					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
+				
+				writeString(payload, topicnames[i]);
+				payload.writeByte(Qoss[i]);
 			}
 			//TODO:send subscribe message
+			var type:int=MQTT_Protocol.SUBSCRIBE;
+			if (QoS)
+				type+=QoS << 1;
+			this.subscribeMessage=new MQTT_Protocol();
+			this.subscribeMessage.writeType(type);
+			this.subscribeMessage.writeBody(varHead);
+			this.subscribeMessage.writeRemainingLength(payload.length);
+			this.subscribeMessage.position = 4;
+			this.subscribeMessage.writeBytes(payload);
+			//There is something wrong below,socket don't work
+//			socket.writeBytes(this.subscribeMessage);
+//			socket.flush();
+			//
+			LOG.info("Subscribe sent");
 		}
 
 		//
@@ -386,7 +411,8 @@ package com.godpaper.mqtt.as3.impl
 			this.socket.writeBytes(this.connectMessage, 0, this.connectMessage.length);
 			this.socket.flush();
 			//dispatch event
-			this.dispatchEvent(new MQTTEvent(MQTTEvent.CONNECT, false, false));
+			//just TCP/IP connection not MQTT connection
+			//this.dispatchEvent(new MQTTEvent(MQTTEvent.CONNECT, false, false));
 		}
 
 		//
@@ -433,66 +459,76 @@ package com.godpaper.mqtt.as3.impl
 		{
 			LOG.info("MQTT Socket received {0}{1}", this.socket.bytesAvailable, " byte(s) of data.");
 			// Loop over all of the received data, and only read a byte if there  is one available 
-			var result:MQTT_Protocol=new MQTT_Protocol();
-			socket.readBytes(result);
-			//
-			switch (result.readyMessageType())
-			{
-				case MQTT_Protocol.CONNACK:
-					onConnack(result);
-					LOG.info("Acknowledge connection request");
-					break;
-				case MQTT_Protocol.PUBLISH:
-					onPublish(result);
-					LOG.info("Publish message");
-					break;
-				case MQTT_Protocol.PUBACK:
-					onPuback(result);
-					LOG.info("Publish acknowledgment");
-					break;
-				case MQTT_Protocol.PUBREC:
-					onPubrec(result);
-					LOG.info("Assured publish received(part1)");
-					break;
-				case MQTT_Protocol.PUBREL:
-					onPubrel(result);
-					LOG.info("Assured publish release(part2)");
-					break;
-				case MQTT_Protocol.PUBCOMP:
-					onPubcomp(result);
-					LOG.info("Assured publish complete(part3)");
-					break;
-				case MQTT_Protocol.SUBSCRIBE:
-					onSubscribe(result);
-					LOG.info("Subscribe to named topics");
-					break;
-				case MQTT_Protocol.SUBACK:
-					onSuback(result);
-					LOG.info("Subscription acknowledgement");
-					break;
-				case MQTT_Protocol.UNSUBSCRIBE:
-					onUnsubscribe(result);
-					LOG.info("Subscription acknowledgement");
-					break;
-				case MQTT_Protocol.UNSUBACK:
-					onUnsuback(result);
-					LOG.info("Unsubscribe acknowledgement");
-					break;
-				case MQTT_Protocol.PINGREQ:
-					onPingreg(result);
-					LOG.info("PING request");
-					break;
-				case MQTT_Protocol.PINGRESP:
-					onPingesp(result);
-					LOG.info("PING response");
-					break;
-				case MQTT_Protocol.DISCONNECT:
-					onDisconnect(result);
-					LOG.info("Client is Disconnecting");
-					break;
-				default:
-					LOG.info("Reserved");
-					break;
+			
+			while( socket.bytesAvailable ){
+				//FixHead
+				var result:MQTT_Protocol=new MQTT_Protocol();
+					result.writeType(socket.readUnsignedByte());
+				//get VarHead and Payload use RemainingLength
+				var remainingLength:uint = socket.readUnsignedByte();
+				var varHead:ByteArray = new ByteArray();
+				socket.readBytes(varHead, 0, remainingLength);
+				
+				result.writeBody(varHead);
+				
+				switch (result.readyMessageType())
+				{
+					case MQTT_Protocol.CONNACK:
+						onConnack(result);
+						LOG.info("Acknowledge connection request");
+						break;
+					case MQTT_Protocol.PUBLISH:
+						onPublish(result);
+						LOG.info("Publish message");
+						break;
+					case MQTT_Protocol.PUBACK:
+						onPuback(result);
+						LOG.info("Publish acknowledgment");
+						break;
+					case MQTT_Protocol.PUBREC:
+						onPubrec(result);
+						LOG.info("Assured publish received(part1)");
+						break;
+					case MQTT_Protocol.PUBREL:
+						onPubrel(result);
+						LOG.info("Assured publish release(part2)");
+						break;
+					case MQTT_Protocol.PUBCOMP:
+						onPubcomp(result);
+						LOG.info("Assured publish complete(part3)");
+						break;
+					case MQTT_Protocol.SUBSCRIBE:
+						onSubscribe(result);
+						LOG.info("Subscribe to named topics");
+						break;
+					case MQTT_Protocol.SUBACK:
+						onSuback(result);
+						LOG.info("Subscription acknowledgement");
+						break;
+					case MQTT_Protocol.UNSUBSCRIBE:
+						onUnsubscribe(result);
+						LOG.info("Subscription acknowledgement");
+						break;
+					case MQTT_Protocol.UNSUBACK:
+						onUnsuback(result);
+						LOG.info("Unsubscribe acknowledgement");
+						break;
+					case MQTT_Protocol.PINGREQ:
+						onPingreq(result);
+						LOG.info("PING request");
+						break;
+					case MQTT_Protocol.PINGRESP:
+						onPingesp(result);
+						LOG.info("PING response");
+						break;
+					case MQTT_Protocol.DISCONNECT:
+						onDisconnect(result);
+						LOG.info("Client is Disconnecting");
+						break;
+					default:
+						LOG.info("Reserved");
+						break;
+				}
 			}
 		}
 
@@ -565,72 +601,72 @@ package com.godpaper.mqtt.as3.impl
 		protected function onPuback(packet:MQTT_Protocol):void
 		{
 			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readVarHead();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
+			switch(packet.readRemainingLength()){
+				case 0x02:
+					//Variable header
+					var varHead:ByteArray = packet.readVarHead();
+					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+					LOG.info("Puback Message ID {0}", messageId)
 					break;
 				default:
 					break;
 			}
+			//Payload
+			//Actions
 		}
 
 		//TODO:
 		protected function onPubrec(packet:MQTT_Protocol):void
 		{
 			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readVarHead();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
+			switch(packet.readRemainingLength()){
+				case 0x02:
+					//Variable header
+					var varHead:ByteArray = packet.readVarHead();
+					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+					LOG.info("Pubrec Message ID {0}", messageId)
 					break;
 				default:
 					break;
 			}
+			//Payload
+			//Actions
 		}
 
 		//TODO:
 		protected function onPubrel(packet:MQTT_Protocol):void
 		{
 			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readVarHead();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
+			switch(packet.readRemainingLength()){
+				case 0x02:
+					//Variable header
+					var varHead:ByteArray = packet.readVarHead();
+					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+					LOG.info("Pubrel Message ID {0}", messageId)
 					break;
 				default:
 					break;
 			}
+			//Payload
+			//Actions
 		}
 
 		//TODO:
 		protected function onPubcomp(packet:MQTT_Protocol):void
 		{
 			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readVarHead();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
+			switch(packet.readRemainingLength()){
+				case 0x02:
+					//Variable header
+					var varHead:ByteArray = packet.readVarHead();
+					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+					LOG.info("Pubcomp Message ID {0}", messageId)
 					break;
 				default:
 					break;
 			}
+			//Payload
+			//Actions
 		}
 
 		//TODO:
@@ -655,18 +691,14 @@ package com.godpaper.mqtt.as3.impl
 		protected function onSuback(packet:MQTT_Protocol):void
 		{
 			//Fixed header
+			var payloadLen:int = packet.readRemainingLength();
 			//Variable header
+			var varHead:ByteArray = packet.readVarHead();
+			var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+			LOG.info("Suback Message ID {0}", messageId)
 			//Payload
+			var qos:int = varHead.readUnsignedByte() & 0x03;
 			//Actions
-			var varHead:ByteArray=packet.readVarHead();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
-					break;
-				default:
-					break;
-			}
 		}
 
 		//TODO:
@@ -691,22 +723,23 @@ package com.godpaper.mqtt.as3.impl
 		protected function onUnsuback(packet:MQTT_Protocol):void
 		{
 			//Fixed header
-			//Variable header
-			//Payload
-			//Actions
-			var varHead:ByteArray=packet.readVarHead();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
+			switch(packet.readRemainingLength()){
+				case 0x02:
+					//Variable header( 2 bytes)
+					var varHead:ByteArray = packet.readVarHead();
+					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+					LOG.info("Unsuback Message ID {0}", messageId)
 					break;
 				default:
 					break;
 			}
+			
+			//Payload
+			//Actions
 		}
 
 		//TODO:
-		protected function onPingreg(packet:MQTT_Protocol):void
+		protected function onPingreq(packet:MQTT_Protocol):void
 		{
 			//Only Fixed header
 			switch (packet.readRemainingLength())
