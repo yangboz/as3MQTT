@@ -84,8 +84,9 @@ package com.godpaper.mqtt.as3.core
 
 		protected var fixHead:ByteArray;
 		protected var varHead:ByteArray;
+		protected var payLoad:ByteArray;
 		
-		protected var messageType:uint;
+		protected var type:uint;
 		protected var dup:uint;
 		protected var qos:uint;
 		protected var retain:uint;
@@ -124,73 +125,37 @@ package com.godpaper.mqtt.as3.core
 		//
 		//--------------------------------------------------------------------------
 		//
-		public function writeBody(body:ByteArray):void
+		public function writeType(value:int):void
 		{
-			remainingLength = body.length;
-			
-			writeType(messageType + (dup << 3) + (qos << 1) + retain);
-			this.writeBytes(body);
+			type = value;
+			writeMessageType(type + (dup << 3) + (qos << 1) + retain);
 		}
 		
-		public function writeType(value:uint):void
-		{
-			this.position = 0;
-			this.writeByte(value);
-			this.writeByte(remainingLength);
-			
-			messageType = value & 0xF0;
-			dup = (value >> 3) & 0x01;
-			qos = (value >> 1) & 0x03;
-			retain = value & 0x01;
-		}
-		
-		//
-		public function writeMessageType(value:uint):void
-		{
-			messageType = value;
-			writeType(messageType + (dup << 3) + (qos << 1) + retain);
-		}
-		
-		public function writeDUP(value:uint):void
+		public function writeDUP(value:int):void
 		{
 			dup = value;
-			writeType(messageType + (dup << 3) + (qos << 1) + retain);
+			writeMessageType(type + (dup << 3) + (qos << 1) + retain);
 		}
 		
-		public function writeQoS(value:uint):void
+		public function writeQoS(value:int):void
 		{
 			qos = value;
-			writeType(messageType + (dup << 3) + (qos << 1) + retain);
+			writeMessageType(type + (dup << 3) + (qos << 1) + retain);
 		}
 		
-		public function writeRETIAN(value:uint):void
+		public function writeRETAIN(value:int):void
 		{
 			retain = value;
-			writeType(messageType + (dup << 3) + (qos << 1) + retain);
+			writeMessageType(type + (dup << 3) + (qos << 1) + retain);
 		}
 		
-		public function writeRemainingLength(value:uint):void
+		public function writeRemainingLength(value:int):void
 		{
 			remainingLength = value;
-			writeType(messageType + (dup << 3) + (qos << 1) + retain);
+			writeMessageType(type + (dup << 3) + (qos << 1) + retain);
 		}
 		
-		//
-		public function readVarHead():ByteArray
-		{
-			this.position=0;
-			if (varHead == null && this.length > 2)
-			{
-				varHead=new ByteArray();
-				this.position = 2;
-				this.readBytes(varHead);
-				varHead.position = 0;
-			}
-			return varHead;
-		}
-
-		//
-		public function readyMessageType():uint
+		public function readType():uint
 		{
 			this.position=0;
 			return this.readUnsignedByte() & 0xF0;
@@ -202,13 +167,13 @@ package com.godpaper.mqtt.as3.core
 			return this.readUnsignedByte() >> 3 & 0x01;
 		}
 		
-		public function readyQoS():uint
+		public function readQoS():uint
 		{
 			this.position=0;
 			return this.readUnsignedByte() >> 1 & 0x03;
 		}
 		
-		public function readyRETAIN():uint
+		public function readRETAIN():uint
 		{
 			this.position=0;
 			return this.readUnsignedByte() & 0x01;
@@ -218,6 +183,92 @@ package com.godpaper.mqtt.as3.core
 		{
 			this.position = 1;
 			return this.readUnsignedByte();
+		}
+		
+		public function writeMessageType(value:int):void//Fix Head
+		{
+			this.position = 0;
+			
+			if( fixHead == null )
+				fixHead = new ByteArray();
+			
+			this.position = 0;
+			this.writeByte(value);
+			this.writeByte(remainingLength);
+			this.readBytes(fixHead);
+			
+			type = value & 0xF0;
+			dup = (value >> 3) & 0x01;
+			qos = (value >> 1) & 0x03;
+			retain = value & 0x01;
+		}
+		
+		public function writeMessageValue(value:*):void//Variable Head
+		{
+			this.position = 2;
+			this.writeBytes(value);
+			this.serialize();
+			writeMessageType( type + (dup << 3) + (qos << 1) + retain );
+		}
+		
+		public function readMessageType():ByteArray
+		{
+			return fixHead;
+		}
+		
+		public function readMessageValue():ByteArray
+		{
+			return varHead;
+		}
+		
+		public function readPayLoad():ByteArray
+		{
+			return payLoad;
+		}
+		
+		public function serialize():void
+		{
+			type 	= this.readType();
+			dup 	= this.readDUP();
+			qos 	= this.readQoS();
+			retain	= this.readRETAIN();
+			
+			fixHead = new ByteArray();
+			varHead = new ByteArray();
+			payLoad = new ByteArray();
+			
+			this.position = 0;
+			this.readBytes(fixHead, 0, 2);
+			
+			this.position = 2;
+			switch( type ){
+				case CONNECT://Remaining Length is the length of the variable header (12 bytes) and the length of the Payload
+					this.readBytes(varHead, 0 , 12);
+					this.readBytes(payLoad);
+					
+					remainingLength = varHead.length + payLoad.length;
+					break;
+				case PUBLISH://Remaining Length is the length of the variable header plus the length of the payload
+					var index:int = (this.readUnsignedByte() << 8) + this.readUnsignedByte();//the length of variable header
+					this.readBytes(varHead, 0 , index);
+					this.readBytes(payLoad);
+					
+					remainingLength = varHead.length + payLoad.length;
+					break;
+				case SUBSCRIBE://Remaining Length is the length of the payload
+				case SUBACK://Remaining Length is the length of the payload
+				case UNSUBSCRIBE://Remaining Length is the length of the payload
+					this.readBytes(varHead, 0 , 2);
+					this.readBytes(payLoad);
+					
+					remainingLength = varHead.length + payLoad.length;
+					break;
+				default://Remaining Length is the length of the variable header (2 bytes)
+					this.readBytes(varHead, 0);
+					
+					remainingLength = varHead.length;
+					break;
+			}
 		}
 		//--------------------------------------------------------------------------
 		//
