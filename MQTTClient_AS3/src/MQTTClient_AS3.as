@@ -126,8 +126,8 @@ package
 			LOG.info("MQTT connect: {0}",event.message);
 			//mqttSocket.close();
 			mqttSocket.publish("asdfasdf","Test",1);
-			mqttSocket.subscribe(Vector.<String>(["a/b","c/d"]), Vector.<int>([1,2]), 1);
-			mqttSocket.unsubscribe(Vector.<String>(["a/b","c/d"]), 1);
+			mqttSocket.subscribe(Vector.<String>(["a-b","c-d"]), Vector.<int>([1,2]), 1);
+			mqttSocket.unsubscribe(Vector.<String>(["a-b","c-d"]), 1);
 		}
 
 		//
