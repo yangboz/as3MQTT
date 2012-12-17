@@ -128,7 +128,7 @@ package com.godpaper.mqtt.as3.impl
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
-		private static const MAX_LEN_UUID:int=16;
+		private static const MAX_LEN_UUID:int=23;
 		private static const MAX_LEN_TOPIC:int=7;
 		private static const MAX_LEN_USERNAME:int=12;
 		//Topic level separator
@@ -202,18 +202,18 @@ package com.godpaper.mqtt.as3.impl
 			//Any out of range issue???
 			//It is recommended that user names are kept to 12 characters or
 			//fewer, but it is not required.
-			if (username)
-			{
-				if (this.topicname.length > MAX_LEN_USERNAME)
-					throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
-				this.username=username;
-			}
-			if (password)
-			{
-				if (this.topicname.length > MAX_LEN_USERNAME)
-					throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
-				this.password=password;
-			}
+			//if (username)
+			//{
+			//	if (this.topicname.length > MAX_LEN_USERNAME)
+			//		throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
+			//	this.username=username;
+			//}
+			//if (password)
+			//{
+			//	if (this.topicname.length > MAX_LEN_USERNAME)
+			//		throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
+			//	this.password=password;
+			//}
 			//			this.publishMessage.writeUTFBytes("HELLO"); // (0x48, 0x45 , 0x4c , 0x4c, 0x4f); //HELLO is the message
 			//Will flag/Qos/Retain
 			if (will)
@@ -255,7 +255,11 @@ package com.godpaper.mqtt.as3.impl
 			bytes.writeByte(msgid % 256);
 			
 			var i:int;
+			var pattern:RegExp = /\/|\+|\#/;
+			
 			for(i = 0; i < topicnames.length; i++){
+				if (topicnames[i].search(pattern) != -1)
+					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
 				if (topicnames[i].length > MAX_LEN_TOPIC)
 					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
 				
@@ -282,8 +286,11 @@ package com.godpaper.mqtt.as3.impl
 			if( QoS ) msgid++;
 				bytes.writeByte(msgid >> 8);
 				bytes.writeByte(msgid % 256);
+			var pattern:RegExp = /\/|\+|\#/;
 			var i:int;
 			for(i = 0; i < topicnames.length; i++){
+				if (topicnames[i].search(pattern) != -1)
+					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
 				if (topicnames[i].length > MAX_LEN_TOPIC)
 					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
 				
@@ -307,6 +314,9 @@ package com.godpaper.mqtt.as3.impl
 		//
 		public function publish(content:String, topicname:String, QoS:int=0, retain:int=0):void
 		{
+			var pattern:RegExp = /\/|\+|\#/;
+			if (topicname.search(pattern) != -1)
+				throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
 			//TODO:socket sever response detect.
 			var bytes:ByteArray=new ByteArray();
 			writeString(bytes, topicname);
