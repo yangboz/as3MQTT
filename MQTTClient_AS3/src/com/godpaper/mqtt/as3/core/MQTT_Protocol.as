@@ -22,6 +22,7 @@
 package com.godpaper.mqtt.as3.core
 {
 	import flash.utils.ByteArray;
+	import flash.utils.IDataInput;
 
 	//--------------------------------------------------------------------------
 	//
@@ -211,6 +212,18 @@ package com.godpaper.mqtt.as3.core
 			writeMessageType( type + (dup << 3) + (qos << 1) + retain );
 		}
 		
+		public function writeMessageFromBytes(input:IDataInput):void
+		{
+			this.position = 0;
+			this.writeType(input.readUnsignedByte());
+			//get VarHead and Payload use RemainingLength
+			remainingLength = input.readUnsignedByte();
+			
+			input.readBytes(this, 2, remainingLength);
+			serialize();
+			writeMessageType( type + (dup << 3) + (qos << 1) + retain );
+		}
+		
 		public function readMessageType():ByteArray
 		{
 			return fixHead;
@@ -250,7 +263,8 @@ package com.godpaper.mqtt.as3.core
 					break;
 				case PUBLISH://Remaining Length is the length of the variable header plus the length of the payload
 					var index:int = (this.readUnsignedByte() << 8) + this.readUnsignedByte();//the length of variable header
-					this.readBytes(varHead, 0 , index);
+					this.position = 2;
+					this.readBytes(varHead, 0 , index + 4);
 					this.readBytes(payLoad);
 					
 					remainingLength = varHead.length + payLoad.length;
@@ -264,7 +278,7 @@ package com.godpaper.mqtt.as3.core
 					remainingLength = varHead.length + payLoad.length;
 					break;
 				default://Remaining Length is the length of the variable header (2 bytes)
-					this.readBytes(varHead, 0);
+					this.readBytes(varHead);
 					
 					remainingLength = varHead.length;
 					break;

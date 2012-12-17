@@ -250,6 +250,7 @@ package com.godpaper.mqtt.as3.impl
 			//subscribe list store,and subscribe to socket server.
 			var bytes:ByteArray = new ByteArray();
 			
+			if( QoS ) msgid++;
 			bytes.writeByte(msgid >> 8);
 			bytes.writeByte(msgid % 256);
 			
@@ -278,7 +279,7 @@ package com.godpaper.mqtt.as3.impl
 		{
 			//unubscribe list store,and unubscribe to socket server.
 			var bytes:ByteArray = new ByteArray();
-				
+			if( QoS ) msgid++;
 				bytes.writeByte(msgid >> 8);
 				bytes.writeByte(msgid % 256);
 			var i:int;
@@ -296,6 +297,7 @@ package com.godpaper.mqtt.as3.impl
 			this.unsubscribeMessage.writeMessageType(type);
 			this.unsubscribeMessage.writeMessageValue(bytes);
 			//
+			
 			socket.writeBytes(this.unsubscribeMessage);
 			socket.flush();
 
@@ -326,8 +328,10 @@ package com.godpaper.mqtt.as3.impl
 			this.publishMessage.writeMessageType(type);
 			this.publishMessage.writeMessageValue(bytes);
 			//
-			socket.writeBytes(this.publishMessage);
-			socket.flush();
+			LOG.info("MQTT publishMessage.length:{0}", this.publishMessage.length);
+			this.socket.writeBytes(this.publishMessage, 0, this.publishMessage.length);
+			this.socket.flush();
+			
 			//
 			LOG.info("Publish sent");
 		}
@@ -467,9 +471,13 @@ package com.godpaper.mqtt.as3.impl
 			if (this.pingMessage == null)
 			{
 				this.pingMessage=new MQTT_Protocol();
-				this.pingMessage.writeType(MQTT_Protocol.PINGREQ);
+				
+				this.pingMessage.writeMessageType(MQTT_Protocol.PINGREQ);
+				this.pingMessage.writeMessageValue(new ByteArray);
 			}
-			socket.writeBytes(this.pingMessage);
+			LOG.info("MQTT pingMessage.length:{0}", this.pingMessage.length);
+			socket.writeBytes(this.pingMessage, 0, this.pingMessage.length);
+			
 			socket.flush();
 			LOG.info("Ping sent.");
 		}
@@ -483,13 +491,8 @@ package com.godpaper.mqtt.as3.impl
 			while( socket.bytesAvailable ){
 				//FixHead
 				var result:MQTT_Protocol=new MQTT_Protocol();
-					result.writeType(socket.readUnsignedByte());
-				//get VarHead and Payload use RemainingLength
-				var remainingLength:uint = socket.readUnsignedByte();
-				var bytes:ByteArray = new ByteArray();
-				socket.readBytes(bytes, 0, remainingLength);
+					result.writeMessageFromBytes(socket);
 				
-				result.writeMessageValue(bytes);
 				LOG.info("Protocol Type:{0}", result.readType().toString(16));
 				LOG.info("Protocol Length:{0}", result.length);
 				LOG.info("Protocol DUP:{0}", result.readDUP());
