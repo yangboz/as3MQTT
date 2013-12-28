@@ -172,7 +172,7 @@ package com.godpaper.mqtt.as3.impl
 		 * 
 		 */		
 //		public function MQTTSocket(host:String=null, port:int=1883, topicname:String=null, clientid:String=null, username:String=null, password:String=null,willRetain:Boolean=true,willQos:Boolean=true,willFlag:Boolean=true,cleanSession:Boolean=true)
-		public function MQTTSocket(host:String=null, port:int=1883, topicname:String=null, clientid:String=null, username:String=null, password:String=null,will:Boolean=true,cleanSession:Boolean=true)
+		public function MQTTSocket(host:String=null, port:int=1883, username:String=null, password:String=null, topicname:String=null, clientid:String=null,will:Boolean=true,cleanSession:Boolean=true)
 		{
 			//parameters store
 			if (host)
@@ -181,16 +181,16 @@ package com.godpaper.mqtt.as3.impl
 				this.port=port;
 			if (topicname)
 			{
-				if (this.topicname.length > MAX_LEN_TOPIC)
+				if (topicname.length > MAX_LEN_TOPIC)
 					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
 				var pattern:RegExp = /\/|\+|\#/;
-				if (this.topicname.search(pattern) != -1)
+				if (topicname.search(pattern) != -1)
 					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
 				this.topicname=topicname;
 			}
 			if (clientid)
 			{
-				if (this.clientid.length > MAX_LEN_UUID)
+				if (clientid.length > MAX_LEN_UUID)
 					throw new Error("Out of range ".concat(MAX_LEN_UUID, "!"));
 				this.clientid=clientid;
 			}
@@ -202,18 +202,18 @@ package com.godpaper.mqtt.as3.impl
 			//Any out of range issue???
 			//It is recommended that user names are kept to 12 characters or
 			//fewer, but it is not required.
-			//if (username)
-			//{
-			//	if (this.topicname.length > MAX_LEN_USERNAME)
-			//		throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
-			//	this.username=username;
-			//}
-			//if (password)
-			//{
-			//	if (this.topicname.length > MAX_LEN_USERNAME)
-			//		throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
-			//	this.password=password;
-			//}
+			if (username)
+			{
+				if (username.length > MAX_LEN_USERNAME)
+					throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
+				this.username=username;
+			}
+			if (password)
+			{
+				if (password.length > MAX_LEN_USERNAME)
+					throw new Error("Out of range ".concat(MAX_LEN_USERNAME, "!"));
+				this.password=password;
+			}
 			//			this.publishMessage.writeUTFBytes("HELLO"); // (0x48, 0x45 , 0x4c , 0x4c, 0x4f); //HELLO is the message
 			//Will flag/Qos/Retain
 			if (will)

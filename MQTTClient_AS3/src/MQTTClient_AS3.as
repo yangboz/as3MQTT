@@ -90,7 +90,7 @@ package
 		public function MQTTClient_AS3()
 		{
 //			Creating a Socket
-			this.mqttSocket=new MQTTSocket(MY_HOST, MY_PORT);
+			this.mqttSocket=new MQTTSocket(MY_HOST, MY_PORT, "test", "test");
 			//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
 			Security.allowDomain("*");
 //			Security.loadPolicyFile("http://www.lookbackon.com/crossdomain.xml");  
