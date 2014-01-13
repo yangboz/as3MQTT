@@ -3,6 +3,14 @@ as3MQTT
 
 Pure/Native Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging.
 
+* Gist
+
+see: 
+
+* Maven repository
+
+http://repository-godpaper.forge.cloudbees.com/snapshot/com/godpaper/as3/as3MQTT/
+
 ## Overview
 
 MQ Telemetry Transport (MQTT) is a lightweight broker-based publish/subscribe messaging protocol designed to be open, simple, lightweight and easy to implement. These characteristics make it ideal for use in constrained environments, for example, but not limited to:
