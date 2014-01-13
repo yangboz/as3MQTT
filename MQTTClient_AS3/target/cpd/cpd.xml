@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd-cpd>
+<duplication lines="7" tokens="76">
+<file line="261" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<file line="292" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<codefragment>
+<![CDATA[
+			for(i = 0; i < topicnames.length; i++){
+				if (topicnames[i].search(pattern) != -1)
+					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
+				if (topicnames[i].length > MAX_LEN_TOPIC)
+					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
+				
+				writeString(bytes, topicnames[i]);
+]]>
+</codefragment>
+</duplication>
+<duplication lines="9" tokens="52">
+<file line="645" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<file line="663" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<file line="698" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<file line="716" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<file line="789" path="C:\Users\yangboz\git\as3MQTT\MQTTClient_AS3\src\com\godpaper\mqtt\as3\impl\MQTTSocket.as"/>
+<codefragment>
+<![CDATA[
+		protected function onUnsuback(packet:MQTT_Protocol):void
+		{
+			//Fixed header
+			switch(packet.readRemainingLength()){
+				case 0x02:
+					//Variable header( 2 bytes)
+					var varHead:ByteArray = packet.readMessageValue();
+					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+					LOG.info("Unsuback Message ID {0}", messageId)
+]]>
+</codefragment>
+</duplication>
+</pmd-cpd>
