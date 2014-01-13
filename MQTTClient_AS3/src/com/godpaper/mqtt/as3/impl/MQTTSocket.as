@@ -118,6 +118,7 @@ package com.godpaper.mqtt.as3.impl
 		//First let's construct the MQTT messages that need to be sent:
 		private var connectMessage:MQTT_Protocol;
 		private var publishMessage:MQTT_Protocol;
+		private var pubrelMessage:MQTT_Protocol;
 		private var subscribeMessage:MQTT_Protocol;
 		private var unsubscribeMessage:MQTT_Protocol;
 		private var disconnectMessage:MQTT_Protocol;
@@ -172,7 +173,7 @@ package com.godpaper.mqtt.as3.impl
 		 * 
 		 */		
 //		public function MQTTSocket(host:String=null, port:int=1883, topicname:String=null, clientid:String=null, username:String=null, password:String=null,willRetain:Boolean=true,willQos:Boolean=true,willFlag:Boolean=true,cleanSession:Boolean=true)
-		public function MQTTSocket(host:String=null, port:int=1883, username:String=null, password:String=null, topicname:String=null, clientid:String=null,will:Boolean=true,cleanSession:Boolean=true)
+		public function MQTTSocket(host:String=null, port:int=1883,username:String=null, password:String=null, topicname:String=null, clientid:String=null, will:Boolean=true,cleanSession:Boolean=true)
 		{
 			//parameters store
 			if (host)
@@ -312,7 +313,7 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		//
-		public function publish(content:String, topicname:String, QoS:int=0, retain:int=0):void
+		public function publish(topicname:String, content:String, QoS:int=0, retain:int=0):void
 		{
 			var pattern:RegExp = /\/|\+|\#/;
 			if (topicname.search(pattern) != -1)
@@ -456,7 +457,7 @@ package com.godpaper.mqtt.as3.impl
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE, false, false));
 			//TODO:Other dispose staff
-			
+			keep_alive_timer.stop();
 		}
 
 		//
@@ -530,10 +531,10 @@ package com.godpaper.mqtt.as3.impl
 						onPubrec(result);
 						LOG.info("Assured publish received(part1)");
 						break;
-					case MQTT_Protocol.PUBREL:
-						onPubrel(result);
-						LOG.info("Assured publish release(part2)");
-						break;
+//					case MQTT_Protocol.PUBREL:
+//						onPubrel(result);
+//						LOG.info("Assured publish release(part2)");
+//						break;
 					case MQTT_Protocol.PUBCOMP:
 						onPubcomp(result);
 						LOG.info("Assured publish complete(part3)");
@@ -626,14 +627,16 @@ package com.godpaper.mqtt.as3.impl
 			//Payload
 			//Actions
 			var varHead:ByteArray=packet.readMessageValue();
-			varHead.position=1;
-			switch (varHead.readUnsignedByte())
-			{
-				case 0x00:
-					break;
-				default:
-					break;
-			}
+			var length:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+			var topicName:String = varHead.readMultiByte(length, "utf8");
+			var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+			var payLoad:ByteArray = packet.readPayLoad();
+			length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
+			var topicContent:String = payLoad.readMultiByte(length, "utf8");
+			
+			LOG.info("Publish Message ID {0}", messageId);
+			LOG.info("Publish TopicName {0}", topicName);
+			LOG.info("Publish TopicContent {0}", topicContent);
 		}
 
 		//A PUBACK message is the response to a PUBLISH message with QoS level 1. A PUBACK
@@ -666,6 +669,23 @@ package com.godpaper.mqtt.as3.impl
 					var varHead:ByteArray = packet.readMessageValue();
 					var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
 					LOG.info("Pubrec Message ID {0}", messageId)
+					
+					var bytes:ByteArray=new ByteArray();
+					writeString(bytes, topicname);
+					//
+					msgid++;
+					bytes.writeByte(messageId >> 8);
+					bytes.writeByte(messageId % 256);
+					var type:int=MQTT_Protocol.PUBREL;
+					type += (2 << 1);
+					this.pubrelMessage=new MQTT_Protocol();
+					this.pubrelMessage.writeMessageType(type);
+					this.pubrelMessage.writeMessageValue(bytes);
+					//
+					LOG.info("Assured publish release(part2)");
+					LOG.info("MQTT pubrelMessage.length:{0}", this.pubrelMessage.length);
+					this.socket.writeBytes(this.pubrelMessage, 0, this.pubrelMessage.length);
+					this.socket.flush();
 					break;
 				default:
 					break;
