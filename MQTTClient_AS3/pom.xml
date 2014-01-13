@@ -59,6 +59,14 @@
                         <version>[0.0.1-SNAPSHOT, ]</version>
                         <type>swc</type>
                 </dependency>
+                
+                <dependency>
+				  <groupId>com.adobe.flexunit</groupId>
+				  <artifactId>flexunit</artifactId>
+				  <version>4.0-rc-1</version>
+				  <type>swc</type>
+				</dependency>
+				
         </dependencies>
 
         <repositories>
@@ -81,7 +89,17 @@
                                 <enabled>true</enabled>
                         </releases>
                         <snapshots>
-                                <enabled>false</enabled>
+                                <enabled>true</enabled>
+                        </snapshots>
+                </repository>
+                <repository>
+                        <id>GODPAPER-repository</id>
+                        <url>http://repository-godpaper.forge.cloudbees.com/snapshot/</url>
+                        <releases>
+                                <enabled>true</enabled>
+                        </releases>
+                        <snapshots>
+                                <enabled>true</enabled>
                         </snapshots>
                 </repository>
         </repositories>
