@@ -119,7 +119,10 @@ package com.godpaper.mqtt.as3.core
 		//  Constructor
 		//
 		//--------------------------------------------------------------------------
-
+		public function MQTT_Protocol():void
+		{
+			super();
+		}
 		//--------------------------------------------------------------------------
 		//
 		//  Public methods

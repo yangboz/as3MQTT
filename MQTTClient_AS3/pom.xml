@@ -4,136 +4,166 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.godpaper.as3</groupId>
-        <packaging>swc</packaging>
-        <version>0.0.1-SNAPSHOT</version>
+	<packaging>swc</packaging>
+	<version>0.0.1-SNAPSHOT</version>
 
-        <properties>
-                <flexmojos.version>4.2-beta</flexmojos.version>
-                <flex.framework.version>4.6.b.23201</flex.framework.version>
-                <playerglobal.version>11.1</playerglobal.version>
-        </properties>
+	<properties>
+		<flexmojos.version>4.2-beta</flexmojos.version>
+		<flex.framework.version>4.6.b.23201</flex.framework.version>
+		<playerglobal.version>11.1</playerglobal.version>
+	</properties>
 
-        <ciManagement>
-                <system>jenkins</system>
-                <url>https://godpaper.ci.cloudbees.com/job/as3MQTT/</url>
-        </ciManagement>
+	<ciManagement>
+		<system>jenkins</system>
+		<url>https://godpaper.ci.cloudbees.com/job/as3MQTT/</url>
+	</ciManagement>
 
-        <build>
-                <sourceDirectory>src</sourceDirectory>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<testSourceDirectory>src/flexUnitTests</testSourceDirectory>
 
-                <plugins>
-                        <plugin>
-                                <groupId>org.sonatype.flexmojos</groupId>
-                                <artifactId>flexmojos-maven-plugin</artifactId>
-                                <version>${flexmojos.version}</version>
-                                <extensions>true</extensions>
-                                <configuration>
-                                        <storepass />
-                                        <skipTests>true</skipTests>
-                                        <skipTest>true</skipTest>
-                                </configuration>
-                                <dependencies>
-                                        <dependency>
-                                                <groupId>com.adobe.flex</groupId>
-                                                <artifactId>compiler</artifactId>
-                                                <version>${flex.framework.version}</version>
-                                                <type>pom</type>
-                                        </dependency>
-                                </dependencies>
-                        </plugin>
-                </plugins>
+		<plugins>
+			<plugin>
+				<groupId>org.sonatype.flexmojos</groupId>
+				<artifactId>flexmojos-maven-plugin</artifactId>
+				<version>${flexmojos.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<headlessServer>true</headlessServer>
+					<verboseStacktraces>true</verboseStacktraces>
+					<includeTestFiles>
+						<include>FlexUnitApplication.mxml</include>
+						<include>FlexUnitCompilerApplication.mxml</include>
+						<include>flexUnitTests/MQTTEventTest.as</include>
+						<include>flexUnitTests/MQTTSocketTest.as</include>
+					</includeTestFiles>
+					<storepass />
+					<skipTests>true</skipTests>
+					<skipTest>true</skipTest>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.adobe.flex</groupId>
+						<artifactId>compiler</artifactId>
+						<version>${flex.framework.version}</version>
+						<type>pom</type>
+					</dependency>
+				</dependencies>
 
-        </build>
+			</plugin>
 
-        <dependencies>
-                <dependency>
-                        <groupId>com.adobe.flex.framework</groupId>
-                        <artifactId>flex-framework</artifactId>
-                        <version>${flex.framework.version}</version>
-                        <type>pom</type>
-                </dependency>
 
-                <dependency>
-                        <groupId>com.godpaper.as3</groupId>
-                        <artifactId>as3Logger</artifactId>
-                        <version>[0.0.1-SNAPSHOT, ]</version>
-                        <type>swc</type>
-                </dependency>
-                
-                <dependency>
-				  <groupId>com.adobe.flexunit</groupId>
-				  <artifactId>flexunit</artifactId>
-				  <version>4.0-rc-1</version>
-				  <type>swc</type>
-				</dependency>
-				
-        </dependencies>
+		</plugins>
 
-        <repositories>
-                <repository>
-                        <id>sonatype-repository</id>
-                        <url>https://oss.sonatype.org/content/groups/public</url>
-                        <releases>
-                                <enabled>true</enabled>
-                                <updatePolicy>never</updatePolicy>
-                        </releases>
-                        <snapshots>
-                                <enabled>false</enabled>
-                                <updatePolicy>never</updatePolicy>
-                        </snapshots>
-                </repository>
-                <repository>
-                        <id>flex-mojos-repository</id>
-                        <url>http://repository.sonatype.org/content/groups/flexgroup/</url>
-                        <releases>
-                                <enabled>true</enabled>
-                        </releases>
-                        <snapshots>
-                                <enabled>true</enabled>
-                        </snapshots>
-                </repository>
-                <repository>
-                        <id>GODPAPER-repository</id>
-                        <url>http://repository-godpaper.forge.cloudbees.com/snapshot/</url>
-                        <releases>
-                                <enabled>true</enabled>
-                        </releases>
-                        <snapshots>
-                                <enabled>true</enabled>
-                        </snapshots>
-                </repository>
-        </repositories>
+	</build>
 
-        <pluginRepositories>
-                <pluginRepository>
-                        <id>sonatype-repository</id>
-                        <url>https://oss.sonatype.org/content/groups/public</url>
-                        <releases>
-                                <enabled>true</enabled>
-                                <updatePolicy>never</updatePolicy>
-                        </releases>
-                        <snapshots>
-                                <enabled>false</enabled>
-                                <updatePolicy>never</updatePolicy>
-                        </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                        <id>flex-mojos-repository</id>
-                        <url>http://repository.sonatype.org/content/groups/flexgroup/</url>
-                        <releases>
-                                <enabled>true</enabled>
-                        </releases>
-                        <snapshots>
-                                <enabled>false</enabled>
-                        </snapshots>
-                </pluginRepository>
-        </pluginRepositories>
-        <name>as3MQTT</name>
-  <url>https://github.com/yangboz/as3MQTT/wiki</url>
-  <organization>
-  	<name>GODPAPER</name>
-  	<url>http://www.godpaper.com</url>
-  </organization>
-  <description>Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </description>
-  <artifactId>MQTTClient_AS3</artifactId>
+	<dependencies>
+		<dependency>
+			<groupId>com.adobe.flex.framework</groupId>
+			<artifactId>flex-framework</artifactId>
+			<version>${flex.framework.version}</version>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.godpaper.as3</groupId>
+			<artifactId>as3Logger</artifactId>
+			<version>[0.0.1-SNAPSHOT, ]</version>
+			<type>swc</type>
+		</dependency>
+		<!-- Unit testing support baked into FlexMojos -->
+		<dependency>
+			<groupId>org.sonatype.flexmojos</groupId>
+			<artifactId>flexmojos-unittest-support</artifactId>
+			<version>${flexmojos.version}</version>
+			<type>swc</type>
+			<scope>test</scope>
+		</dependency>
+		<!-- Based on testing library dependency specified, FlexMojos will know 
+			how to test your application -->
+		<dependency>
+			<groupId>org.sonatype.flexmojos</groupId>
+			<artifactId>flexmojos-unittest-flexunit</artifactId>
+			<version>${flexmojos.version}</version>
+			<type>swc</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.adobe.flexunit</groupId>
+			<artifactId>flexunit</artifactId>
+			<version>4.0-rc-1</version>
+			<type>swc</type>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>sonatype-repository</id>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>flex-mojos-repository</id>
+			<url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>GODPAPER-repository</id>
+			<url>http://repository-godpaper.forge.cloudbees.com/snapshot/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>sonatype-repository</id>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>flex-mojos-repository</id>
+			<url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+	<name>as3MQTT</name>
+	<url>https://github.com/yangboz/as3MQTT/wiki</url>
+	<organization>
+		<name>GODPAPER</name>
+		<url>http://www.godpaper.com</url>
+	</organization>
+	<description>Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </description>
+	<artifactId>MQTTClient_AS3</artifactId>
 </project>

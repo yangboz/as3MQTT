@@ -75,7 +75,7 @@ package
 		//  Constructor
 		//
 		//--------------------------------------------------------------------------
-		
+		public function FlexUnitCompilerApplication():void{};
 		private var flexUnitTests_MQTTEventTest_obj:flexUnitTests.MQTTEventTest;     	
 		//--------------------------------------------------------------------------
 		//
