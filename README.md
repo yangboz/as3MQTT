@@ -11,6 +11,10 @@ see:
 
 http://repository-godpaper.forge.cloudbees.com/snapshot/com/godpaper/as3/as3MQTT/
 
+* ASDOC
+
+http://htmlpreview.github.io/?https://github.com/yangboz/as3MQTT/blob/master/MQTTClient_AS3/target/asdoc/index.html
+
 ## Overview
 
 MQ Telemetry Transport (MQTT) is a lightweight broker-based publish/subscribe messaging protocol designed to be open, simple, lightweight and easy to implement. These characteristics make it ideal for use in constrained environments, for example, but not limited to:
