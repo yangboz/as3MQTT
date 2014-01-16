@@ -1,0 +1,59 @@
+<project name="GODPAPER_ASDOC"
+		 basedir="."
+		 default="docs">
+	<property name="FLEX_HOME"
+			  value="C:\Software\FLEX\sdks\4.6.0"/>
+	<property name="OUTPUT_DIR" 
+			  value="${basedir}/target/asdoc"/>
+	<taskdef resource="flexTasks.tasks"
+			 classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/>
+	<property name="flexlib" location="${FLEX_HOME}/frameworks"/>
+	<!--
+		DELETE the existing output folder and files and then re-generate the output folder
+	-->
+	<target name="docs" depends="init">
+		<asdoc 
+			   window-title="GODPAPER Action Script API Document"
+			   main-title="GODPAPER"
+			   footer="Information on this site is by default visible to everyone within GODPAPER. Please ensure you apply appropriate access controls when posting GODPAPER Confidential information.Copyright © by GODPAPER. All material on this collaboration platform is the property of GODPAPER."
+			   output="${OUTPUT_DIR}" 
+			   failonerror="true"
+			   lenient="true"
+			   strict="false"
+			   report-invalid-styles-as-warnings="true"
+			   templates-path="${FLEX_HOME}\asdoc\templates_godpaper"
+			   >
+			<!-- generate asdoc for all as/mxml files in the doc-sources -->
+			<doc-sources path-element="src" />
+			<!-- source path for asdoc -->
+			<compiler.source-path path-element="src"/>
+
+			<external-library-path dir="libs">
+				<include name="*.swc" />
+				<!--<include name="unittest/*.swc" />-->
+			</external-library-path>
+			
+			<external-library-path dir="${flexlib}/libs">
+				<!--<include name="*.swc" />-->
+				<include name="air/*.swc" />
+		    </external-library-path>
+			
+			<define name="CONFIG::DEV" value="false"/>
+			
+			<!--<exclude-sources path-element="src/mx/core/Version.as" />-->
+			<exclude-sources path-element="src/FlexUnitApplication.as" />
+			<exclude-sources path-element="src/FlexUnitCompilerApplication.as" />
+		</asdoc>
+
+	</target>
+	<target name="clean">
+		<delete includeEmptyDirs="true">
+			<fileset dir="${OUTPUT_DIR}" includes="**/*"/>
+		</delete>
+	</target>
+	
+	<target name="init" depends="clean">
+        <mkdir dir="${OUTPUT_DIR}" />
+    </target>
+	
+</project>
