@@ -453,6 +453,7 @@ package com.godpaper.mqtt.as3.impl
 		//
 		protected function onClose(event:Event):void
 		{
+			LOG.error("MQTT IO Error: {0}", event);
 			// Security error is thrown if this line is excluded
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE, false, false));
@@ -631,12 +632,29 @@ package com.godpaper.mqtt.as3.impl
 			var topicName:String = varHead.readMultiByte(length, "utf8");
 			var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
 			var payLoad:ByteArray = packet.readPayLoad();
-			length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
+			if( packet.readQoS() )
+				length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
+			else
+				length = packet.readPayLoad().length;
 			var topicContent:String = payLoad.readMultiByte(length, "utf8");
 			
 			LOG.info("Publish Message ID {0}", messageId);
 			LOG.info("Publish TopicName {0}", topicName);
 			LOG.info("Publish TopicContent {0}", topicContent);
+			
+			var bytes:ByteArray=new ByteArray();
+			msgid++;
+			bytes.writeByte(messageId >> 8);
+			bytes.writeByte(messageId % 256);
+			var type:int=MQTT_Protocol.PUBACK;
+			type += (packet.readQoS() << 1);
+			this.pubackMessage=new MQTT_Protocol();
+			this.pubackMessage.writeMessageType(type);
+			this.pubackMessage.writeMessageValue(bytes);
+			//
+			LOG.info("MQTT pubackMessage.length:{0}", this.pubackMessage.length);
+			this.socket.writeBytes(this.pubackMessage, 0, this.pubackMessage.length);
+			this.socket.flush();
 		}
 
 		//A PUBACK message is the response to a PUBLISH message with QoS level 1. A PUBACK
@@ -677,7 +695,7 @@ package com.godpaper.mqtt.as3.impl
 					bytes.writeByte(messageId >> 8);
 					bytes.writeByte(messageId % 256);
 					var type:int=MQTT_Protocol.PUBREL;
-					type += (2 << 1);
+					type += (1 << 1);
 					this.pubrelMessage=new MQTT_Protocol();
 					this.pubrelMessage.writeMessageType(type);
 					this.pubrelMessage.writeMessageValue(bytes);
