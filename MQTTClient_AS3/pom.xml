@@ -6,7 +6,7 @@
 	<groupId>com.godpaper.as3</groupId>
 	<packaging>swc</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-
+	
 	<properties>
 		<flexmojos.version>4.2-beta</flexmojos.version>
 		<flex.framework.version>4.6.b.23201</flex.framework.version>
