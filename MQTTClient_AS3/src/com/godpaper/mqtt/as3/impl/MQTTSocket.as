@@ -118,6 +118,7 @@ package com.godpaper.mqtt.as3.impl
 		//First let's construct the MQTT messages that need to be sent:
 		private var connectMessage:MQTT_Protocol;
 		private var publishMessage:MQTT_Protocol;
+		private var pubackMessage:MQTT_Protocol;
 		private var pubrelMessage:MQTT_Protocol;
 		private var subscribeMessage:MQTT_Protocol;
 		private var unsubscribeMessage:MQTT_Protocol;
