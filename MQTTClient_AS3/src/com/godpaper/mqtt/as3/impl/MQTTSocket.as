@@ -633,10 +633,11 @@ package com.godpaper.mqtt.as3.impl
 			var topicName:String = varHead.readMultiByte(length, "utf8");
 			var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
 			var payLoad:ByteArray = packet.readPayLoad();
-			if( packet.readQoS() )
-				length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
-			else
-				length = packet.readPayLoad().length;
+			length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
+			if( length > payLoad.length ){
+				length = payLoad.length;
+				payLoad.position = 0;
+			}
 			var topicContent:String = payLoad.readMultiByte(length, "utf8");
 			
 			LOG.info("Publish Message ID {0}", messageId);
