@@ -5,7 +5,7 @@ Pure/Native Action Script 3 that implements the MQTT (Message Queue Telemetry Tr
 
 * Gist
 
-see: 
+see: https://github.com/yangboz/as3MQTT/blob/master/MQTTClient_AS3/src/MQTTClient_AS3.as
 
 * Maven repository
 
