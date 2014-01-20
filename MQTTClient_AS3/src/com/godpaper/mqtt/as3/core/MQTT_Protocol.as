@@ -267,7 +267,7 @@ package com.godpaper.mqtt.as3.core
 				case PUBLISH://Remaining Length is the length of the variable header plus the length of the payload
 					var index:int = (this.readUnsignedByte() << 8) + this.readUnsignedByte();//the length of variable header
 					this.position = 2;
-					this.readBytes(varHead, 0 , index + 4);
+					this.readBytes(varHead, 0 , index + (qos?4:2));
 					this.readBytes(payLoad);
 					
 					remainingLength = varHead.length + payLoad.length;

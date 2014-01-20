@@ -630,16 +630,19 @@ package com.godpaper.mqtt.as3.impl
 			//Actions
 			var varHead:ByteArray=packet.readMessageValue();
 			var length:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
-			var topicName:String = varHead.readMultiByte(length, "utf8");
-			var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+			var topicName:String = varHead.readMultiByte(length, "utf");
+			if( packet.readQoS() ){
+				var messageId:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
+				LOG.info("Publish Message ID {0}", messageId);
+			}
 			var payLoad:ByteArray = packet.readPayLoad();
-			if( packet.readQoS() )
-				length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
-			else
-				length = packet.readPayLoad().length;
-			var topicContent:String = payLoad.readMultiByte(length, "utf8");
+			length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
+			if( length > payLoad.length ){
+				length = payLoad.length;
+				payLoad.position = 0;
+			}
+			var topicContent:String = payLoad.readMultiByte(length, "utf");
 			
-			LOG.info("Publish Message ID {0}", messageId);
 			LOG.info("Publish TopicName {0}", topicName);
 			LOG.info("Publish TopicContent {0}", topicContent);
 			
