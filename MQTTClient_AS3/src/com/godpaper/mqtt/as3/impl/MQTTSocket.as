@@ -79,14 +79,26 @@ package com.godpaper.mqtt.as3.impl
 		//
 		//--------------------------------------------------------------------------
 		private var socket:Socket; /* holds the socket */
+		/**
+		 *@see http://mqtt.org/wiki/doku.php/add_messageid_to_ping 
+		 */		
 		private var msgid:int=1; /* counter for message id */
+		/**
+		 *@see http://mqtt.org/wiki/doku.php/keepalive_for_the_client 
+		 */		
 		public var keepalive:int=10; /* default keepalive timmer */
 		public var timesinceping:uint; /* host unix time, used to detect disconects */
 //		public var topics:Array = []; /* used to store currently subscribed topics */
+		/**
+		 *@see http://mqtt.org/wiki/doku.php/overlapping_topics 
+		 */		
 		public var topics:Vector.<String>=new Vector.<String>(); /* used to store currently subscribed topics */
 		public var debug:Boolean=false; /* should output debug messages */
 //		public var address:String;	/* broker address */
 		//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
+		/**
+		 *@see http://mqtt.org/wiki/doku.php/short_usernames_and_passwords 
+		 */		
 		public var host:String; /* broker address */
 		public var port:Number; /* broker port */
 		/**
@@ -97,6 +109,7 @@ package com.godpaper.mqtt.as3.impl
 		 * and is the key in handling Message IDs messages with QoS levels 1 and 2.</br>
 		 * If the Client ID contains more than 23 characters, the server responds to the CONNECT message </br>
 		 * with a CONNACK return code 2: Identifier Rejected..</br>
+		 * @see http://mqtt.org/wiki/doku.php/clientid_autogeneration
 		 */
 		public var clientid:String; /* client id sent to brocker */
 		public var will:Array; /* stores the will of the client {willFlag,willQos,willRetainFlag} */
@@ -110,6 +123,7 @@ package com.godpaper.mqtt.as3.impl
 		 * Subscribers use the key to identify the information channels on which they want to receive published information.</br>
 		 * The topic name is a UTF-encoded string. See the section on MQTT and UTF-8 for more information.</br>
 		 * Topic name has an upper length limit of 32,767 characters.</br>
+		 * @see http://mqtt.org/wiki/doku.php/are_topics_dynamic
 		 * */
 		//The topic name is present in the variable header of an MQTT PUBLISH message.
 		public var topicname:String="RoYan_／"; /* default stores topic name */
@@ -881,8 +895,9 @@ package com.godpaper.mqtt.as3.impl
 
 
 
-
-		//
+		/**
+		 * @see http://mqtt.org/wiki/doku.php/short_usernames_and_passwords
+		 */		
 		private function shortenString(str:String, len:int):String
 		{
 			var result:String=str;

@@ -241,7 +241,9 @@ package com.godpaper.mqtt.as3.core
 		{
 			return payLoad;
 		}
-		
+		/**
+		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/utils/IDataInput.html
+		 */		
 		public function serialize():void
 		{
 			type 	= this.readType();
