@@ -90,16 +90,34 @@ package com.godpaper.mqtt.as3.impl
 		public var timesinceping:uint; /* host unix time, used to detect disconects */
 //		public var topics:Array = []; /* used to store currently subscribed topics */
 		/**
-		 *@see http://mqtt.org/wiki/doku.php/overlapping_topics 
+		 * The topic name is a UTF-encoded string. See the section on MQTT and UTF-8 for more information. </br>
+		 * Topic name has an upper length limit of 32,767 characters. </br>
+		 * @see http://mqtt.org/wiki/doku.php/overlapping_topics 
 		 */		
 		public var topics:Vector.<String>=new Vector.<String>(); /* used to store currently subscribed topics */
 		public var debug:Boolean=false; /* should output debug messages */
 //		public var address:String;	/* broker address */
 		//Notice: You need to define a cross domain policy file at your remote server root document, or have a policy file server on the target. 
 		/**
-		 *@see http://mqtt.org/wiki/doku.php/short_usernames_and_passwords 
+		 * A fully qualified DNS domain name or an IP address. 
+		 * IPv4 addresses are specified in dot-decimal notation, such as 192.0.2.0. 
+		 * In Flash Player 9.0.115.0 and AIR 1.0 and later, you can specify IPv6 addresses using hexadecimal-colon notation, 
+		 * such as 2001:db8:ccc3:ffff:0:444d:555e:666f. 
+		 * You can also specify null to connect to the host server on which the SWF file resides. 
+		 * If the SWF file issuing this call is running in a web browser, 
+		 * host must be in the domain from which the SWF file originated. </br>
+		 * @see http://mqtt.org/wiki/doku.php/short_usernames_and_passwords 
 		 */		
 		public var host:String; /* broker address */
+		/**
+		 * The TCP port number on the target host used to establish a connection. 
+		 * In Flash Player 9.0.124.0 and later, the target host must serve a socket policy file specifying 
+		 * that socket connections are permitted from the host serving the SWF file to the specified port. 
+		 * In earlier versions of Flash Player, 
+		 * a socket policy file is required only if you want to connect to a port number below 1024, 
+		 * or if you want to connect to a host other than the one serving the SWF file. </br>
+		 * @see http://mqtt.org/wiki/doku.php/short_usernames_and_passwords 
+		 */		
 		public var port:Number; /* broker port */
 		/**
 		 * The first UTF-encoded string.</br>
@@ -141,6 +159,7 @@ package com.godpaper.mqtt.as3.impl
 		//The Keep Alive timer is present in the variable header of a MQTT CONNECT message.
 		private var keep_alive_timer:Timer; //Set to 10 seconds (0x000A).
 		private var servicing:Boolean; /*service indicator*/
+		private var _isConnect:Boolean; /*socket connection indicator*/
 		//----------------------------------
 		//  CONSTANTS
 		//----------------------------------
@@ -161,7 +180,14 @@ package com.godpaper.mqtt.as3.impl
 		//  Public properties
 		//
 		//-------------------------------------------------------------------------- 
-
+		/**
+		 * Return MQTTSocket connection status code.
+		 * @return 
+		 */		
+		public function get isConnect():Boolean
+		{
+			return _isConnect;
+		}
 		//--------------------------------------------------------------------------
 		//
 		//  Protected properties
@@ -260,7 +286,13 @@ package com.godpaper.mqtt.as3.impl
 		//  Public methods
 		//
 		//--------------------------------------------------------------------------
-		//
+		/**
+		 * 
+		 * @param topicnames The topic name is present in the variable header of an MQTT PUBLISH message.
+		 * @param Qoss Qos levels
+		 * @param QoS Current Qos level.
+		 * 
+		 */		
 		public function subscribe(topicnames:Vector.<String>, Qoss:Vector.<int>, QoS:int=0):void
 		{
 			//subscribe list store,and subscribe to socket server.
@@ -274,10 +306,16 @@ package com.godpaper.mqtt.as3.impl
 			var pattern:RegExp = /\/|\+|\#/;
 			
 			for(i = 0; i < topicnames.length; i++){
-				if (topicnames[i].search(pattern) != -1)
-					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
-				if (topicnames[i].length > MAX_LEN_TOPIC)
-					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
+				//TODO:Nomore validation on topic name,according to MQTT_SPEC document.
+				/*A UTF-encoded string.
+					This must not contain Topic wildcard characters.
+					When received by a client that subscribed using wildcard characters, this string will
+					be the absolute topic specified by the originating publisher and not the subscription
+					string used by the client.*/
+//				if (topicnames[i].search(pattern) != -1)
+//					throw new Error("Illegal topic name,include: ".concat(TOPIC_LEVEL_SEPARATOR,TOPIC_M_LEVEL_WILDCARD,TOPIC_S_LEVEL_WILDCARD));
+//				if (topicnames[i].length > MAX_LEN_TOPIC)
+//					throw new Error("Out of range ".concat(MAX_LEN_TOPIC, "!"));
 				
 				writeString(bytes, topicnames[i]);
 				bytes.writeByte(Qoss[i]);
@@ -294,7 +332,10 @@ package com.godpaper.mqtt.as3.impl
 			
 			LOG.info("Subscribe sent");
 		}
-		
+		/**
+		 * @param topicnames unsubscribed topic names.
+		 * @param QoS current Qos level
+		 */		
 		public function unsubscribe(topicnames:Vector.<String>, QoS:int=0):void
 		{
 			//unubscribe list store,and unubscribe to socket server.
@@ -328,7 +369,15 @@ package com.godpaper.mqtt.as3.impl
 		}
 		
 		//
-		public function publish(topicname:String, content:String, QoS:int=0, retain:int=0):void
+		/**
+		 * A PUBLISH message is sent by a client to a server for distribution to interested subscribers.
+		 * @param topicname Each PUBLISH message is associated with a topic name (also known as the Subject or Channel). This is a hierarchical name space that defines a taxonomy of information sources for which subscribers can register an interest
+		 * @param message A message that is published to a specific topic name is delivered to connected subscribers for that topic.
+		 * @param QoS Qos level.
+		 * @param DUP Set to zero (0). This means that the message is being sent for the first time. See DUP for more details.
+		 * @param retain Set to zero. This means do not retain. See Retain for more details.
+		 */		
+		public function publish(topicname:String, message:String, QoS:int=0, retain:int=0):void
 		{
 			var pattern:RegExp = /\/|\+|\#/;
 			if (topicname.search(pattern) != -1)
@@ -344,7 +393,7 @@ package com.godpaper.mqtt.as3.impl
 				bytes.writeByte(msgid % 256);
 			}
 			//
-			writeString(bytes, content);
+			writeString(bytes, message);
 			//
 			var type:int=MQTT_Protocol.PUBLISH;
 				type += (QoS << 1);
@@ -361,7 +410,10 @@ package com.godpaper.mqtt.as3.impl
 			//
 			LOG.info("Publish sent");
 		}
-
+		/**
+		 * @param host The MQTT socket required host name.
+		 * @param port The MQTT socket required host port.
+		 */		
 		public function connect(host:String=null, port:int=0):void
 		{
 			if (host)
@@ -373,6 +425,14 @@ package com.godpaper.mqtt.as3.impl
 		}
 
 		/* disconnect: sends a proper disconect command */
+		/**
+		 * The DISCONNECT message is sent from the client to the server to indicate that 
+		 * it is about to close its TCP/IP connection. This allows for a clean disconnection, 
+		 * rather than just dropping the line.
+		 * If the client had connected with the clean session flag set, 
+		 * then all previously maintained information about the client will be discarded.
+		 * A server should not rely on the client to close the TCP/IP connection after receiving a DISCONNECT. 
+		 */		
 		public function close():void
 		{
 			if (this.disconnectMessage == null)
@@ -386,7 +446,7 @@ package com.godpaper.mqtt.as3.impl
 			//dispatch event
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE, false, false));
 		}
-
+		
 		//--------------------------------------------------------------------------
 		//
 		//  Protected methods
@@ -463,6 +523,7 @@ package com.godpaper.mqtt.as3.impl
 			//dispatch event
 			//just TCP/IP connection not MQTT connection
 			//this.dispatchEvent(new MQTTEvent(MQTTEvent.CONNECT, false, false));
+			this._isConnect = true;
 		}
 
 		//
@@ -474,6 +535,7 @@ package com.godpaper.mqtt.as3.impl
 			this.dispatchEvent(new MQTTEvent(MQTTEvent.CLOSE, false, false));
 			//TODO:Other dispose staff
 			keep_alive_timer.stop();
+			this._isConnect = false;
 		}
 
 		//

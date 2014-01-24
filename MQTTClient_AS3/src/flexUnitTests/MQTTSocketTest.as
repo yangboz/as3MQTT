@@ -26,6 +26,9 @@ package flexUnitTests
 	//  Imports
 	//
 	//--------------------------------------------------------------------------
+//	import com.godpaper.mqtt.as3.core.MQTTEvent;
+	import com.godpaper.mqtt.as3.impl.MQTTSocket;
+	
 	import flexunit.framework.Assert;
 	
 	/**
@@ -38,14 +41,24 @@ package flexUnitTests
 	 */
 	public class MQTTSocketTest
 	{		
+		private var mqttSocket:MQTTSocket;
+		private static const MY_HOST:String="test.mosquitto.org"; //You'd better change it to your private ip address! //test.mosquitto.org//16.157.65.23(Ubuntu)//15.185.106.72(hp cs instance)
+		private static const MY_PORT:Number=1883; //Socket port.
+		private static const MY_USERNAME:String="test";
+		private static const MY_PASSWORD:String="test";
+		private static const MY_TOPIC_NAME:String="test";
 		[Before]
 		public function setUp():void
 		{
+			this.mqttSocket = new MQTTSocket(MY_HOST,MY_PORT,MY_USERNAME,MY_PASSWORD,MY_TOPIC_NAME);
+			trace("trace(this.mqttSocket.isConnect):",this.mqttSocket.isConnect);
 		}
 		
 		[After]
 		public function tearDown():void
 		{
+			trace("trace(this.mqttSocket.isConnect):",this.mqttSocket.isConnect);
+			this.mqttSocket = null;
 		}
 		
 		[BeforeClass]
@@ -61,19 +74,25 @@ package flexUnitTests
 		[Test]
 		public function testClose():void
 		{
-			Assert.fail("Test method Not yet implemented");
+//			Assert.fail("Test method Not yet implemented");
+			this.mqttSocket.close();
+			Assert.assertEquals(this.mqttSocket.isConnect,false);
 		}
 		
 		[Test]
 		public function testConnect():void
 		{
-			Assert.fail("Test method Not yet implemented");
+			this.mqttSocket.connect(MY_HOST,MY_PORT);
+			//TODO:Wait a minutes to MQTTSocket connection..
+//			Assert.fail("Test method Not yet implemented");
+			Assert.assertEquals(this.mqttSocket.isConnect,false);//At once, the connection will not be connected.
 		}
 		
 		[Test]
 		public function testMQTTSocket():void
 		{
-			Assert.fail("Test method Not yet implemented");
+//			Assert.fail("Test method Not yet implemented");
+			Assert.assertNotNull(this.mqttSocket);
 		}
 		
 		[Test]

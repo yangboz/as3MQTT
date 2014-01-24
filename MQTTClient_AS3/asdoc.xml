@@ -47,7 +47,7 @@
 
 	</target>
 	<target name="clean">
-		<delete includeEmptyDirs="true">
+		<delete includeEmptyDirs="true" failonerror="false">
 			<fileset dir="${OUTPUT_DIR}" includes="**/*"/>
 		</delete>
 	</target>
