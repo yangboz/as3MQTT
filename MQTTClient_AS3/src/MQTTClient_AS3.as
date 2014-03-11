@@ -26,8 +26,8 @@ package
 	//  Imports
 	//
 	//--------------------------------------------------------------------------
-	import com.godpaper.as3.configs.LoggerConfig;
-	import com.godpaper.as3.utils.LogUtil;
+	import com.godpaper.mqtt.as3.configs.LoggerConfig;
+	import com.godpaper.mqtt.as3.utils.LogUtil;
 	import com.godpaper.mqtt.as3.core.MQTTEvent;
 	import com.godpaper.mqtt.as3.impl.MQTTSocket;
 	
