@@ -1,5 +1,4 @@
-<cross-domain-policy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="http://www.adobe.com/xml/schemas/PolicyFile.xsd">
+<cross-domain-policy xsi:noNamespaceSchemaLocation="http://www.adobe.com/xml/schemas/PolicyFile.xsd">
 	<site-control permitted-cross-domain-policies="by-content-type" />
 	<allow-access-from domain="*" to-ports="*" />
 </cross-domain-policy>
