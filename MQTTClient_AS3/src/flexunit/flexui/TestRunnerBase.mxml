@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	Adobe Systems Incorporated(r) Source Code License Agreement
+	Copyright(c) 2005 Adobe Systems Incorporated. All rights reserved.
+	
+	Please read this Source Code License Agreement carefully before using
+	the source code.
+	
+	Adobe Systems Incorporated grants to you a perpetual, worldwide, non-exclusive, 
+	no-charge, royalty-free, irrevocable copyright license, to reproduce,
+	prepare derivative works of, publicly display, publicly perform, and
+	distribute this source code and such derivative works in source or 
+	object code form without any attribution requirements.  
+	
+	The name "Adobe Systems Incorporated" must not be used to endorse or promote products
+	derived from the source code without prior written permission.
+	
+	You agree to indemnify, hold harmless and defend Adobe Systems Incorporated from and
+	against any loss, damage, claims or lawsuits, including attorney's 
+	fees that arise or result from your use or distribution of the source 
+	code.
+	
+	THIS SOURCE CODE IS PROVIDED "AS IS" AND "WITH ALL FAULTS", WITHOUT 
+	ANY TECHNICAL SUPPORT OR ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING,
+	BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+	FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  ALSO, THERE IS NO WARRANTY OF 
+	NON-INFRINGEMENT, TITLE OR QUIET ENJOYMENT.  IN NO EVENT SHALL MACROMEDIA
+	OR ITS SUPPLIERS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+	EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+	WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+	OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOURCE CODE, EVEN IF
+	ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" 
+		 implements="flexunit.flexui.IFlexWriter" creationComplete="onCreationComplete()">
+	<mx:Script>
+		<![CDATA[
+		
+		import flexunit.framework.TestCase;
+		import flexunit.framework.Test;
+		import flexunit.framework.AssertionFailedError;
+		import flexunit.flexui.TestRunner;
+		import flexunit.flexui.IFlexWriter;
+		
+		import mx.collections.ListCollectionView;
+		 		
+		private var _totalTests:uint = 0;
+		private var _totalErrors:uint = 0;
+		private var _totalFailures:uint = 0;
+		private var _numTestsRun:uint = 0;
+		
+		public var test:Test;
+		
+		public function onCreationComplete():void
+		{
+		}
+		
+		public function startTest():void
+		{
+			if( test != null )
+			{
+				_totalTests = test.countTestCases();
+				
+				progressBar.minimum = 0;
+				testFailures.dataProvider = new Array();
+				allTestsList.dataProvider = new Array();
+				
+				updateLabels();
+				
+				flexunit.flexui.TestRunner.run( test, this );
+			}
+		}		
+		
+		private function updateLabels():void
+		{
+			runLabel.htmlText = "<b>Run:</b> "+_numTestsRun.toString()+"/"+_totalTests.toString();
+			errorsLabel.htmlText = "<b>Errors:</b> "+_totalErrors.toString();
+			failuresLabel.htmlText = "<b>Failures:</b> "+_totalFailures.toString();
+		}
+		
+		private function updateProgress():void
+		{
+			progressBar.setProgress( _numTestsRun, _totalTests );
+			
+			if( _totalErrors > 0 || _totalFailures > 0 )
+				progressBar.setStyle("barColor",0xFF0000);
+		}
+		
+		private function addFailureToList( test:Test, error:Error ):void
+		{
+			var t:TestCase = test as TestCase;
+			if( t != null )
+			{
+				ListCollectionView(testFailures.dataProvider).addItem( {label:t.methodName+" - "+t.className, test:test, error:error} );
+				testFailures.selectedIndex = testFailures.dataProvider.length;
+				testFailures.verticalScrollPosition = testFailures.maxVerticalScrollPosition;
+				onTestSelected();
+			}
+		}
+		
+		private function onTestSelected():void
+		{
+			var list:List = (testTabs.selectedIndex == 0) ? testFailures : allTestsList;
+			
+			if( list.selectedItem != null )
+				if( list.selectedItem.error != null )
+					stackTrace.text = list.selectedItem.error.getStackTrace();
+				else
+					stackTrace.text = "";
+		}
+		
+		private function addTestToList( success:Boolean, test:Test, error:Error = null ):void
+		{
+			var t:TestCase = test as TestCase;
+			if( t != null )
+			{
+				var label:String = ( success ) ? "[PASS] " : "[FAIL] ";
+				ListCollectionView(allTestsList.dataProvider).addItem( {label:label+t.methodName+" - "+t.className, test:test, error:error} );
+				allTestsList.selectedIndex = allTestsList.dataProvider.length;
+				allTestsList.verticalScrollPosition = allTestsList.maxVerticalScrollPosition;
+				onTestSelected();
+			}			
+		}
+		
+		//---------------------------------------------------------------------
+		// IFlexWriter Methods
+		//---------------------------------------------------------------------
+		
+		public function onTestStart( test:Test ) : void
+		{
+			
+		}
+		
+		public function onTestEnd( test:Test ) : void
+		{
+			_numTestsRun++;
+			
+			updateLabels();
+			updateProgress();
+		}
+		
+		public function onAllTestsEnd() : void
+		{
+			progressBar.setProgress(100,100);
+			if( _totalErrors == 0 && _totalFailures == 0 )
+				progressBar.setStyle("barColor",0x00FF00);
+		}
+		
+		public function onSuccess( test:Test ):void
+		{
+			addTestToList( true, test );
+		}
+		
+ 	   	public function onError( test:Test, error:Error ) : void
+ 	   	{
+ 	   		_totalErrors++;
+ 	   		addFailureToList( test, error );
+ 	   		addTestToList( false, test, error );
+ 	   	}
+ 	   	
+		public function onFailure( test:Test, error:AssertionFailedError ) : void
+		{
+			_totalFailures++;
+			addFailureToList( test, error );
+			addTestToList( false, test, error );
+		}
+		
+		]]>
+	</mx:Script>
+	<mx:Canvas width="100%" height="100%">
+		<mx:Panel backgroundAlpha="0.4" title="Test Runner" paddingBottom="10" width="100%" height="100%">
+			<mx:HBox width="100%">
+				<mx:HBox width="50%" height="20" horizontalAlign="left" paddingLeft="0" paddingRight="10">
+					<mx:ProgressBar width="100%" trackHeight="12" id="progressBar" labelPlacement="left" label="Running..." mode="manual" />
+				</mx:HBox>
+				<mx:HBox width="50%" height="20" horizontalAlign="right">
+					<mx:Label id="runLabel" paddingRight="10" />
+					<mx:Label id="errorsLabel" text="Errors: 0" paddingRight="10" />
+					<mx:Label id="failuresLabel" text="Failures: 0" />					
+				</mx:HBox>
+			</mx:HBox>
+			<mx:HDividedBox width="100%" height="100%">
+				<mx:TabNavigator id="testTabs" change="onTestSelected()" width="50%" 
+					height="100%" paddingBottom="0" paddingLeft="0" paddingRight="0" 
+					paddingTop="0" creationPolicy="all" >
+					<mx:Canvas label="Failures" width="100%" height="100%">
+						<mx:List id="testFailures" width="100%" height="100%" borderStyle="none"
+								 change="onTestSelected()" />
+					</mx:Canvas>
+					<mx:Canvas label="All Tests" width="100%" height="100%">
+						<mx:List id="allTestsList" width="100%" height="100%" borderStyle="none"
+								 change="onTestSelected()" />								
+					</mx:Canvas>
+			<!--	<mx:Canvas label="Hierarchy" width="100%" height="100%">
+						<mx:Tree id="testHierarchy" width="100%" height="100%" borderStyle="none" />
+					</mx:Canvas> -->
+				</mx:TabNavigator>					
+				<mx:VBox width="50%" height="100%">
+					<mx:HBox width="100%" height="15" paddingBottom="0" 
+								paddingLeft="0" paddingRight="0" paddingTop="0">
+						<mx:Label text="Stack Trace"></mx:Label>
+					</mx:HBox>				
+					<!-- <mx:List id="failureStackTrace" width="100%" height="100%" borderStyle="none" /> -->
+					<mx:TextArea id="stackTrace" width="100%" height="100%" borderStyle="none" wordWrap="false" />
+				</mx:VBox>				
+			</mx:HDividedBox>
+		</mx:Panel>
+	</mx:Canvas>
+</mx:VBox>
