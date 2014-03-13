@@ -1,20 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testrun name="" >
 <testsuite  name="Default Test Suite" project="as3MQTT">
-<testsuite name="flexunit.framework.tests:ErrorTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:SetupErrorTearDownTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:SuccessTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:FailureTestCase" type="testsuiteclass"/>
 <testsuite name="flexUnitTests:MQTTSocketTest" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:TestTestListener" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:TearDownErrorTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:TearDownTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:TestTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:TestAssert" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:SetupErrorTestCase" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:TestAsynchronous" type="testsuiteclass"/>
 <testsuite name="flexUnitTests:MQTTEventTest" type="testsuiteclass"/>
-<testsuite name="flexunit.framework.tests:AsynchronousTestCase" type="testsuiteclass"/>
 </testsuite>
 <portNumber value="8765" />
 </testrun>

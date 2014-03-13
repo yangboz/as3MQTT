@@ -26,7 +26,7 @@ package com.godpaper.mqtt.as3.impl
 	//  Imports
 	//
 	//--------------------------------------------------------------------------
-	import com.godpaper.mqtt.as3.utils.LogUtil;
+	import com.godpaper.as3.utils.LogUtil;
 	import com.godpaper.mqtt.as3.core.MQTTEvent;
 	import com.godpaper.mqtt.as3.core.MQTT_Protocol;
 	import com.godpaper.mqtt.as3.utils.UIDUtil;
