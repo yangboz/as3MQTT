@@ -57,6 +57,9 @@ package com.godpaper.mqtt.as3.impl
 
 	/** Dispatched when a new  MQTT server is error-ed. */
 	[Event(name="mqttError", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
+	
+	/** Dispatched when a new  PUBLISH is received. */
+	[Event(name="mqttPublish", type="com.godpaper.mqtt.as3.core.MQTTEvent")]
 	/**
 	 * Pure Action Script 3 that implements the MQTT (Message Queue Telemetry Transport) protocol, a lightweight protocol for publish/subscribe messaging. </br>
 	 * AS3 socket is a mechanism used to send data over a network (e.g. the Internet), it is the combination of an IP address and a port. </br>
@@ -735,6 +738,8 @@ package com.godpaper.mqtt.as3.impl
 			LOG.info("MQTT pubackMessage.length:{0}", this.pubackMessage.length);
 			this.socket.writeBytes(this.pubackMessage, 0, this.pubackMessage.length);
 			this.socket.flush();
+			
+			this.dispatchEvent(new MQTTEvent(MQTTEvent.PUBLISH, false, false, topicName + ":" + topicContent));
 		}
 
 		//A PUBACK message is the response to a PUBLISH message with QoS level 1. A PUBACK

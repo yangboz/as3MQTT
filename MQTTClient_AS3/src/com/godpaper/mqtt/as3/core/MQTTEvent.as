@@ -54,6 +54,7 @@ package com.godpaper.mqtt.as3.core
 		public static const CLOSE:String = "mqttClose";
 		public static const MESSGE:String = "mqttMessage";//A wrapper for mqtt socket data.
 		public static const ERROR:String = "mqttError";//A wrapper for mqtt socket error(IOError,SercurityError)
+		public static const PUBLISH:String = "mqttPublish";
 		//--------------------------------------------------------------------------
 		//
 		//  Public properties

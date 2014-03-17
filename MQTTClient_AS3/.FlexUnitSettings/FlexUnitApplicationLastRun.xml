@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testrun name="" >
-<testsuite  name="Default Test Suite" project="MQTTClient_AS3">
-<testsuite name="flexUnitTests:MQTTEventTest" type="testcaseclass"/>
-<testsuite name="flexUnitTests:MQTTSocketTest" type="testcaseclass"/>
+<testsuite  name="Default Test Suite" project="as3MQTT">
+<testsuite name="flexUnitTests:MQTTSocketTest" type="testsuiteclass"/>
+<testsuite name="flexUnitTests:MQTTEventTest" type="testsuiteclass"/>
 </testsuite>
 <portNumber value="8765" />
 </testrun>
