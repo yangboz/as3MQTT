@@ -58,3 +58,7 @@ https://github.com/yangboz/as3MQTT/wiki
 ## Other libraries
 
 http://mqtt.org/wiki/doku.php/libraries
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/yangboz/as3mqtt/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
