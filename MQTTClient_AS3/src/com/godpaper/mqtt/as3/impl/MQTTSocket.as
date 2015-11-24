@@ -217,7 +217,7 @@ package com.godpaper.mqtt.as3.impl
 		 * 
 		 */		
 //		public function MQTTSocket(host:String=null, port:int=1883, topicname:String=null, clientid:String=null, username:String=null, password:String=null,willRetain:Boolean=true,willQos:Boolean=true,willFlag:Boolean=true,cleanSession:Boolean=true)
-		public function MQTTSocket(host:String=null, port:int=1883,username:String=null, password:String=null, topicname:String=null, clientid:String=null, will:Boolean=true,cleanSession:Boolean=true)
+		public function MQTTSocket(host:String=null, port:int=1883,username:String=null, password:String=null, topicname:String=null, clientid:String=null, will:Boolean=false,cleanSession:Boolean=false)
 		{
 			//parameters store
 			if (host)
@@ -483,14 +483,12 @@ package com.godpaper.mqtt.as3.impl
 				this.connectMessage=new MQTT_Protocol();
 				var bytes:ByteArray=new ByteArray();
 				bytes.writeByte(0x00); //0
-				bytes.writeByte(0x06); //6
+				bytes.writeByte(0x04); //6
 				bytes.writeByte(0x4d); //M
 				bytes.writeByte(0x51); //Q
-				bytes.writeByte(0x49); //I
-				bytes.writeByte(0x73); //S
-				bytes.writeByte(0x64); //D
-				bytes.writeByte(0x70); //P
-				bytes.writeByte(0x03); //Protocol version = 3
+				bytes.writeByte(0x54); //T
+				bytes.writeByte(0x54); //T
+				bytes.writeByte(0x04); //Protocol version = 3
 				//Connect flags
 				var type:int=0;
 				if (cleanSession)
@@ -707,7 +705,7 @@ package com.godpaper.mqtt.as3.impl
 			//Variable header
 			//Payload
 			//Actions
-			var varHead:ByteArray=packet.readMessageValue();
+			var varHead:ByteArray = packet.readMessageValue();
 			var length:uint = (varHead.readUnsignedByte() << 8) + varHead.readUnsignedByte();
 			var topicName:String = varHead.readMultiByte(length, "utf");
 			if( packet.readQoS() ){
@@ -715,12 +713,12 @@ package com.godpaper.mqtt.as3.impl
 				LOG.info("Publish Message ID {0}", messageId);
 			}
 			var payLoad:ByteArray = packet.readPayLoad();
-			length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
-			if( length > payLoad.length ){
-				length = payLoad.length;
-				payLoad.position = 0;
-			}
-			var topicContent:String = payLoad.readMultiByte(length, "utf");
+			//length = (payLoad.readUnsignedByte() << 8) + payLoad.readUnsignedByte();
+			//if( length > payLoad.length ){
+			//	length = payLoad.length;
+			//	payLoad.position = 0;
+			//}
+			var topicContent:String = payLoad.readMultiByte(payLoad.length, "utf-8");
 			
 			LOG.info("Publish TopicName {0}", topicName);
 			LOG.info("Publish TopicContent {0}", topicContent);
