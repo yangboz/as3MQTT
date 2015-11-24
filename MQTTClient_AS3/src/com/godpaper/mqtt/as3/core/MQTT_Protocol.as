@@ -92,6 +92,7 @@ package com.godpaper.mqtt.as3.core
 		protected var qos:uint;
 		protected var retain:uint;
 		protected var remainingLength:uint;
+		protected var remainPosition:uint;
 		
 		///* stores the will of the client {willFlag,willQos,willRetainFlag} */
 		public static var WILL:Array;
@@ -198,7 +199,20 @@ package com.godpaper.mqtt.as3.core
 			
 			this.position = 0;
 			this.writeByte(value);
-			this.writeByte(remainingLength);
+			var le:uint = remainingLength;
+			var digit:uint = 0;
+			do {
+				digit = le % 128;
+				le = le / 128;
+				if(le > 0 ){
+					digit = digit| 0x80;
+				}
+				this.writeByte(digit);
+
+			}while(le > 0);
+			this.remainPosition = this.position;
+
+			//this.writeByte(remainingLength);
 			this.readBytes(fixHead);
 			
 			type = value & 0xF0;
@@ -207,6 +221,7 @@ package com.godpaper.mqtt.as3.core
 			retain = value & 0x01;
 		}
 		
+
 		public function writeMessageValue(value:*):void//Variable Head
 		{
 			this.position = 2;
@@ -220,11 +235,25 @@ package com.godpaper.mqtt.as3.core
 			this.position = 0;
 			this.writeType(input.readUnsignedByte());
 			//get VarHead and Payload use RemainingLength
-			remainingLength = input.readUnsignedByte();
+
+			//remainingLength = input.readUnsignedByte();
 			
-			input.readBytes(this, 2, remainingLength);
-			serialize();
+			//input.readBytes(this, 2, remainingLength);
+
+			var multiplier :uint = 1;
+			var remainLength:uint = 0;
+			do 
+			{
+				var le:uint = input.readUnsignedByte();
+				remainLength += (le & 127) * multiplier;
+				multiplier *= 128;
+				
+			}
+			while ((le & 128) != 0);
+			remainingLength = remainLength;
 			writeMessageType( type + (dup << 3) + (qos << 1) + retain );
+			input.readBytes(this, this.remainPosition, remainingLength);
+			serialize();
 		}
 		
 		public function readMessageType():ByteArray
@@ -256,9 +285,9 @@ package com.godpaper.mqtt.as3.core
 			payLoad = new ByteArray();
 			
 			this.position = 0;
-			this.readBytes(fixHead, 0, 2);
+			this.readBytes(fixHead, 0, this.remainPosition);
 			
-			this.position = 2;
+			this.position = this.remainPosition;
 			switch( type ){
 				case CONNECT://Remaining Length is the length of the variable header (12 bytes) and the length of the Payload
 					this.readBytes(varHead, 0 , 12);
@@ -268,7 +297,7 @@ package com.godpaper.mqtt.as3.core
 					break;
 				case PUBLISH://Remaining Length is the length of the variable header plus the length of the payload
 					var index:int = (this.readUnsignedByte() << 8) + this.readUnsignedByte();//the length of variable header
-					this.position = 2;
+					this.position = this.remainPosition;
 					this.readBytes(varHead, 0 , index + (qos?4:2));
 					this.readBytes(payLoad);
 					
