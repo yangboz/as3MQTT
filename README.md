@@ -58,3 +58,8 @@ https://github.com/yangboz/as3MQTT/wiki
 ## Other libraries
 
 http://mqtt.org/wiki/doku.php/libraries
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/yangboz/as3MQTT/badge.svg?style=beer-square)](https://beerpay.io/yangboz/as3MQTT)  [![Beerpay](https://beerpay.io/yangboz/as3MQTT/make-wish.svg?style=flat-square)](https://beerpay.io/yangboz/as3MQTT?focus=wish)
