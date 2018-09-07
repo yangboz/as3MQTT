@@ -55,9 +55,9 @@ Mosquitto console at Linux: tcpdump -nl -A port 1883
 
 https://github.com/yangboz/as3MQTT/wiki
 
-## Other libraries
+## Other client libraries 
 
-http://mqtt.org/wiki/doku.php/libraries
+https://github.com/mqtt/mqtt.github.io/wiki/libraries
 
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
